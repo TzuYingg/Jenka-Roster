@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#F6F3ED">
+<title>庄腳早午餐 · 排休</title>
+<link rel="icon" href="data:,">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
+:root{
+  --paper:#F6F3ED;--surface:#FCFAF6;--line:#E7E2D8;--tint:#F0ECE3;
+  --ink:#2B2824;--ink2:#6B665C;--ink3:#9C978C;
+  --clay:#BF5B3D;--clay-bg:#F3E2DB;
+  --ok:#5F8268;--ok-bg:#E2ECE4;
+  --warn:#B6863C;--warn-bg:#F1E6CC;
+  --danger:#A2503C;--danger-bg:#EFD9D2;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);line-height:1.6;
+  font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
+  padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 20px)}
+.num{font-family:"DM Sans",sans-serif;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select{font-family:inherit;font-size:15px}
+.hide{display:none !important}
+
+/* ---------- shell ---------- */
+.app{max-width:1180px;margin:0 auto;padding:0 14px}
+.bar{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 12px}
+.bar .id{display:flex;align-items:center;gap:9px}
+.bar .av{width:32px;height:32px;border-radius:9px;background:var(--tint);display:flex;align-items:center;
+  justify-content:center;font-size:15px;color:var(--ink2)}
+.bar .nm{font-size:15px;font-weight:500;line-height:1.25}
+.bar .rl{font-size:11px;color:var(--ink3)}
+.bar .rt{display:flex;align-items:center;gap:8px}
+.mbtn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);color:var(--ink2);background:var(--surface)}
+.mbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:999px;line-height:1.4}
+.chip.w{background:var(--warn-bg);color:#7a5a20}
+.chip.d{background:var(--danger-bg);color:#7a3b2c}
+.chip.o{background:var(--ok-bg);color:#3f5e47}
+.chip.l{background:var(--tint);color:var(--ink2)}
+.chip svg{width:12px;height:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:15px}
+.hr{height:1px;background:var(--line);margin:16px 0}
+
+/* ---------- login ---------- */
+#login{max-width:380px;margin:8vh auto 0;padding:0 16px}
+#login .brand{text-align:center;margin-bottom:22px}
+#login .brand .ey{font-size:11px;letter-spacing:.16em;color:var(--clay);font-weight:500}
+#login .brand h1{font-size:21px;font-weight:500;margin-top:5px}
+#login .brand p{font-size:13px;color:var(--ink2);margin-top:3px}
+.who{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:16px}
+.who button{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 6px;
+  display:flex;flex-direction:column;align-items:center;gap:5px}
+.who button .a{font-size:21px}
+.who button .n{font-size:13px}
+.who button.on{border-color:var(--ink);background:var(--tint)}
+.pin{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
+.pin input{width:46px;height:54px;text-align:center;font-size:21px;border:1px solid var(--line);
+  border-radius:11px;background:var(--surface);color:var(--ink);font-family:"DM Sans"}
+.pin input:focus{outline:none;border-color:var(--ink)}
+.btn{display:block;width:100%;text-align:center;font-size:14px;padding:12px;border-radius:11px}
+.btn.p{background:var(--ink);color:#fff}
+.btn.p:disabled{background:var(--ink3);opacity:.6}
+.btn.g{border:1px solid var(--line);color:var(--ink2);background:var(--surface)}
+.err{font-size:12px;color:var(--danger);text-align:center;min-height:18px;margin-top:8px}
+
+/* ---------- month head ---------- */
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.mhead .m{display:flex;align-items:center;gap:8px}
+.mhead .m b{font-size:17px;font-weight:500}
+.nav{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
+  display:flex;align-items:center;justify-content:center;color:var(--ink2)}
+.nav svg{width:14px;height:14px}
+.meta{display:flex;align-items:center;justify-content:space-between;padding:9px 4px;
+  border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:11px;font-size:12px}
+.meta .k{color:var(--ink2)}
+.meta b{font-weight:500}
+.legend{display:flex;gap:13px;flex-wrap:wrap;padding:0 2px 11px}
+.legend span{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2)}
+.sw{width:12px;height:12px;border-radius:4px;flex:none}
+.sw.must{background:var(--clay)}
+.sw.limited{background:var(--surface);border:1.5px solid var(--clay)}
+.sw.prefer{background:var(--tint);border:1px solid var(--line)}
+
+/* ---------- calendar ---------- */
+.wk{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
+.wk div{text-align:center;font-size:10px;color:var(--ink3)}
+.wk div:first-child,.wk div:last-child{color:var(--clay)}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cell{aspect-ratio:1/1.04;border-radius:9px;border:1px solid transparent;background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+.cell.void{background:transparent;border:none}
+.cell .d{font-size:13px;font-family:"DM Sans";font-variant-numeric:tabular-nums}
+.cell .t{font-size:8px;line-height:1.1;margin-top:2px;text-align:center;padding:0 1px}
+.cell.hol{background:var(--paper)}
+.cell.hol .d{color:var(--clay)}
+.cell.must{background:var(--clay);border-color:var(--clay)}
+.cell.must .d,.cell.must .t{color:#fff}
+.cell.limited{border-color:var(--clay);background:var(--surface)}
+.cell.limited .d{color:var(--clay);font-weight:500}
+.cell.limited .t{color:var(--clay)}
+.cell.prefer{background:var(--tint)}
+.cell.prefer .d,.cell.prefer .t{color:var(--ink3)}
+.cell.closed{background:repeating-linear-gradient(45deg,var(--tint),var(--tint) 3px,var(--paper) 3px,var(--paper) 6px)}
+.cell.closed .d{color:var(--ink3)}
+.cell.wait::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:999px;background:var(--warn)}
+.foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
+.foot .c{font-size:12px;color:var(--ink2)}
+.foot .c b{color:var(--ink);font-weight:500}
+.foot .btn{width:auto;padding:9px 20px;font-size:13px}
+.locked{background:var(--tint);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--ink2);margin-bottom:11px}
+
+/* ---------- modal ---------- */
+.mask{position:fixed;inset:0;background:rgba(43,40,36,.42);display:flex;align-items:flex-end;
+  justify-content:center;z-index:50;padding:0}
+.mask.c{align-items:center;padding:16px}
+.modal{background:var(--surface);width:100%;max-width:420px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.mask.c .modal{border-radius:16px}
+.mh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px}
+.mh .dd{font-size:17px;font-weight:500}
+.mh .wd{font-size:12px;color:var(--ink2)}
+.mhint{font-size:11px;color:var(--ink3);margin-bottom:12px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+.seg button{font-size:12px;padding:10px 2px;border-radius:9px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink2)}
+.seg button.on{background:var(--clay);border-color:var(--clay);color:#fff}
+.lab{font-size:11px;color:var(--ink2);margin-bottom:6px}
+.pool{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
+.pool button{font-size:12px;padding:10px 6px;border-radius:9px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink2);text-align:center}
+.pool button.on{border-color:var(--ink);color:var(--ink);background:var(--tint)}
+.pool button b{font-weight:500;display:block}
+.pool button small{font-size:10px;color:var(--ink3)}
+.pool button:disabled{opacity:.45}
+.times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.times label{display:block}
+.times .lab{margin-bottom:5px}
+.times input{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;
+  background:var(--surface);color:var(--ink);font-family:"DM Sans"}
+.mnote{font-size:11px;color:var(--ink3);margin:-6px 0 12px;line-height:1.5}
+.mfoot{display:flex;gap:8px}
+.mfoot .btn{flex:1}
+.mfoot .btn.rm{color:var(--danger);border:1px solid var(--danger-bg);background:var(--danger-bg)}
+.warnbox{background:var(--warn-bg);color:#7a5a20;font-size:11.5px;padding:9px 11px;border-radius:9px;margin-bottom:12px;line-height:1.5}
+
+/* ---------- owner ---------- */
+.quota{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px;margin-bottom:14px}
+.qr{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:9px 11px;
+  border:1px solid var(--line);border-radius:11px;background:var(--paper)}
+.qr .nm{font-size:12.5px;font-weight:500;white-space:nowrap}
+.qr .nm small{display:block;font-size:10px;color:var(--ink3);font-weight:400}
+.bar2{height:6px;background:var(--tint);border-radius:999px;overflow:hidden;min-width:40px}
+.bar2 i{display:block;height:100%;background:var(--ok);border-radius:999px}
+.bar2.w i{background:var(--warn)}
+.qm{font-size:10.5px;color:var(--ink2);text-align:right;white-space:nowrap}
+.qm .num{font-weight:500;color:var(--ink)}
+.qr.wait{background:var(--surface)}
+.qr.wait .qm{color:var(--clay)}
+.gwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;margin:0 -3px}
+table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
+.grid th{font-size:10px;color:var(--ink3);font-weight:400;padding:1px;min-width:26px}
+.grid th .num{font-weight:500;color:var(--ink2);display:block}
+.grid th.hol .num{color:var(--clay)}
+.grid td.nm{font-size:11px;color:var(--ink2);text-align:right;padding-right:4px;white-space:nowrap;position:sticky;left:0;background:var(--surface)}
+.grid td.c{height:26px;min-width:26px;border-radius:6px;background:var(--paper);text-align:center;
+  font-size:9px;font-family:"DM Sans";color:var(--ink3)}
+.grid td.c.must{background:var(--clay);color:#fff}
+.grid td.c.annual{background:#e9dfd3;color:var(--clay)}
+.grid td.c.limited{border:1px solid var(--clay);color:var(--clay);background:var(--surface)}
+.grid td.c.prefer{background:var(--tint);color:var(--ink3)}
+.grid td.c.closed{background:repeating-linear-gradient(45deg,var(--tint),var(--tint) 3px,var(--paper) 3px,var(--paper) 6px)}
+.grid td.c.wait{background:repeating-linear-gradient(45deg,var(--tint),var(--tint) 3px,var(--surface) 3px,var(--surface) 6px)}
+.grid td.c.over{outline:1.5px solid var(--warn)}
+.notes{margin-top:12px;display:flex;flex-direction:column;gap:7px}
+.note{display:flex;gap:8px;font-size:11.5px;padding:9px 11px;border-radius:9px;line-height:1.5}
+.note.d{background:var(--danger-bg);color:#7a3b2c}
+.note.w{background:var(--warn-bg);color:#7a5a20}
+.note.o{background:var(--ok-bg);color:#3f5e47}
+.note .dt{width:7px;height:7px;border-radius:999px;flex:none;margin-top:5px}
+.note.d .dt{background:var(--danger)}
+.note.w .dt{background:var(--warn)}
+.note.o .dt{background:var(--ok)}
+.note b{font-weight:500}
+.cap{font-size:11px;color:var(--ink3);margin-top:9px;line-height:1.6}
+.sechd{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px}
+.sechd h2{font-size:14px;font-weight:500}
+.sechd .sub{font-size:11px;color:var(--ink2)}
+.frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
+.frow input{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);
+  color:var(--ink);font-family:"DM Sans";text-align:center}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;background:var(--ink);color:#fff;
+  font-size:13px;padding:10px 18px;border-radius:999px;z-index:90;opacity:0;transition:opacity .2s}
+.toast.on{opacity:1}
+.spin{text-align:center;padding:40px 0;color:var(--ink3);font-size:13px}
+@media(min-width:760px){.cell{aspect-ratio:1/.72}}
+</style>
+</head>
+<body>
+
+<!-- ================= LOGIN ================= -->
+<div id="login">
+  <div class="brand">
+    <div class="ey">JENKA ROSTER</div>
+    <h1>庄腳早午餐 · 排休</h1>
+    <p>選擇你的名字,輸入 4 位數 PIN</p>
+  </div>
+  <div class="who" id="who"></div>
+  <div class="pin" id="pinRow">
+    <input inputmode="numeric" maxlength="1" data-i="0">
+    <input inputmode="numeric" maxlength="1" data-i="1">
+    <input inputmode="numeric" maxlength="1" data-i="2">
+    <input inputmode="numeric" maxlength="1" data-i="3">
+  </div>
+  <div class="err" id="loginErr"></div>
+  <button class="btn p" id="loginBtn" disabled>登入</button>
+  <div class="cap" style="text-align:center;margin-top:12px">預設 PIN 為 1234,登入後可自行修改</div>
+</div>
+
+<!-- ================= APP ================= -->
+<div class="app hide" id="app">
+  <div class="bar">
+    <div class="id">
+      <div class="av" id="avatar"></div>
+      <div><div class="nm" id="myName"></div><div class="rl" id="myRole"></div></div>
+    </div>
+    <div class="rt">
+      <button class="mbtn hide" id="viewToggle">老闆檢視</button>
+      <button class="mbtn" id="logout">登出</button>
+    </div>
+  </div>
+
+  <!-- ---------- EMPLOYEE ---------- -->
+  <div id="empView">
+    <div class="card">
+      <div class="mhead">
+        <div class="m">
+          <button class="nav" id="ePrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <b id="eMonth"></b>
+          <button class="nav" id="eNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <span id="eDue"></span>
+      </div>
+      <div id="eLocked" class="locked hide"></div>
+      <div class="meta">
+        <span class="k">假日必休</span>
+        <span><b class="num" id="eHolCnt">0 / 2</b> 天 <span style="color:var(--ink3)" id="eHolLeft"></span></span>
+      </div>
+      <div class="legend">
+        <span><i class="sw must"></i>必休</span>
+        <span><i class="sw limited"></i>限時可上</span>
+        <span><i class="sw prefer"></i>希望排休</span>
+      </div>
+      <div class="wk"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
+      <div class="cal" id="eCal"></div>
+      <div class="foot">
+        <span class="c">已設定 <b class="num" id="eCnt">0</b> 天</span>
+        <button class="btn p" id="eSubmit">送出</button>
+      </div>
+    </div>
+    <div class="cap">點任一天即可設定。必休每天最多 2 人,依送出時間先後;額滿會排候補(右上小點)。</div>
+  </div>
+
+  <!-- ---------- OWNER ---------- -->
+  <div id="ownerView" class="hide">
+    <div class="card">
+      <div class="mhead">
+        <div class="m">
+          <button class="nav" id="oPrev"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M15 5l-7 7 7 7"/></svg></button>
+          <b id="oMonth"></b>
+          <button class="nav" id="oNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+        <div class="rt" style="display:flex;gap:8px;align-items:center">
+          <span id="oStatus"></span>
+          <button class="mbtn" id="oLock">鎖定</button>
+        </div>
+      </div>
+
+      <div class="frow" style="margin-bottom:13px">
+        <span>本月應休天數(依政府行事曆紅字)</span>
+        <input class="num" id="oQuota" inputmode="numeric" placeholder="—">
+        <span style="color:var(--ink3)">天 · 套用到所有正職</span>
+        <button class="mbtn" id="oQuotaSave">儲存</button>
+      </div>
+
+      <div class="sechd"><h2>回報狀況</h2><span class="sub" id="oReport"></span></div>
+      <div class="quota" id="oQuotaList"></div>
+
+      <div class="hr"></div>
+      <div class="sechd"><h2>排休彙整</h2><span class="sub">必休鎖定 · 點格子可標店休</span></div>
+      <div class="gwrap"><table class="grid" id="oGrid"></table></div>
+      <div class="cap">
+        <span style="color:var(--clay)">必</span> 必休 ·
+        <span style="color:var(--clay)">特</span> 特休 ·
+        <span style="color:var(--clay)">限</span> 限時可上 ·
+        希 希望排休 · 斜線 待回報/店休 · 黃框 候補(必休已滿)
+      </div>
+      <div class="notes" id="oNotes"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- ================= MODALS ================= -->
+<div class="mask hide" id="dayMask">
+  <div class="modal">
+    <div class="mh"><div class="dd" id="dTitle"></div><div class="wd" id="dSub"></div></div>
+    <div class="mhint">這天你要——</div>
+    <div id="dWarn"></div>
+    <div class="seg" id="dSeg">
+      <button data-s="must">必休</button>
+      <button data-s="limited">限時可上</button>
+      <button data-s="prefer">希望排休</button>
+    </div>
+    <div id="dPoolWrap" class="hide">
+      <div class="lab">用哪一種假?</div>
+      <div class="pool" id="dPool">
+        <button data-p="normal"><b>排休</b><small>扣本月天數</small></button>
+        <button data-p="annual"><b>特休</b><small id="dAnnLeft">剩 — 天</small></button>
+      </div>
+    </div>
+    <div id="dTimeWrap" class="hide">
+      <div class="times">
+        <label><div class="lab">最早幾點到</div><input type="time" id="dStart" value="06:00"></label>
+        <label><div class="lab">最晚到幾點</div><input type="time" id="dEnd" value="10:00"></label>
+      </div>
+      <div class="mnote">可上的班別會依這個時間自動判斷(全 5:30–14:30 / 早 6:00–10:00 / 午 10:00–14:30)。</div>
+    </div>
+    <div class="mfoot">
+      <button class="btn g" id="dCancel">取消</button>
+      <button class="btn rm hide" id="dClear">清除</button>
+      <button class="btn p" id="dSave">確定</button>
+    </div>
+  </div>
+</div>
+
+<div class="mask c hide" id="closeMask">
+  <div class="modal">
+    <div class="mh"><div class="dd" id="cTitle"></div><div class="wd">店休設定</div></div>
+    <div class="mhint">這天全店不營業,不排班。</div>
+    <div class="mfoot">
+      <button class="btn g" id="cCancel">取消</button>
+      <button class="btn p" id="cToggle">設為店休</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, get, set, update, remove, onValue, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+/* ============ CONFIG — 換成 jenka-inventory 專案的設定 ============ */
+const firebaseConfig = {
+  apiKey: "REPLACE_ME",
+  authDomain: "jenka-inventory.firebaseapp.com",
+  databaseURL: "https://jenka-inventory-default-rtdb.firebaseio.com",
+  projectId: "jenka-inventory",
+  storageBucket: "jenka-inventory.appspot.com",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME"
+};
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+const ROOT = "jenka-roster";
+
+/* ============ SEED (首次執行寫入,之後以 Firebase 為準) ============ */
+const SEED_STAFF = {
+  jen:  {name:"Jen",   role:"老闆",   animal:"獅",   order:1, active:true},
+  kaka: {name:"KaKa",  role:"老闆娘", animal:"羊",   order:2, active:true, owner:true},
+  peiyu:{name:"珮羽",  role:"正職",   animal:"企鵝", order:3, active:true},
+  roxi: {name:"若瑄",  role:"正職",   animal:"松鼠", order:4, active:true},
+  ai:   {name:"小愛",  role:"工讀",   animal:"無尾熊",order:5, active:true},
+  ruru: {name:"汝汝",  role:"工讀",   animal:"青蛙", order:6, active:true},
+  liang:{name:"亮亮",  role:"工讀",   animal:"兔子", order:7, active:true}
+};
+// 基本設定:長期常態(每月自動帶入)
+const SEED_SETTINGS = {
+  jen:  {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
+  kaka: {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
+  peiyu:{weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
+  roxi: {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
+  // 小愛:平日不可、假日全天(暑假平日到 10:30 → 由當月填,不寫進基本設定)
+  ai:   {weekday:false,weekend:true,  window:null,                      weeklyAvoid:[]},
+  // 汝汝:8月起可全天排
+  ruru: {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
+  // 亮亮:6:00–10:00,每週一固定希望排休
+  liang:{weekday:true, weekend:true,  window:{start:"06:00",end:"10:00"}, weeklyAvoid:[1]}
+};
+const SEED_ANNUAL = { peiyu:{total:0,used:0}, roxi:{total:0,used:0}, jen:{total:0,used:0}, kaka:{total:0,used:0}, ai:{total:0,used:0}, ruru:{total:0,used:0}, liang:{total:0,used:0} };
+const DEFAULT_PIN = "1234";
+const FULLTIME = ["peiyu","roxi"];         // 需檢核月休天數的正職
+const MAX_MUST_PER_DAY = 2;                // 每天必休上限
+const MAX_HOLIDAY_MUST = 2;                // 每人每月假日必休上限
+const DUE_DAY = 20;                        // 截止日
+
+/* ============ STATE ============ */
+let ME=null, STAFF={}, SETTINGS={}, ANNUAL={}, MONTH=null;
+let MDATA={status:"open", quota:null, closures:{}, requests:{}};
+let VIEW="emp", SEL_UID=null, PIN="", DAY=null, DRAFT=null, unsub=null;
+
+const $  = s=>document.querySelector(s);
+const $$ = s=>[...document.querySelectorAll(s)];
+const pad = n=>String(n).padStart(2,"0");
+const ymKey = d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
+const isHol = (y,m,d)=>{const w=new Date(y,m-1,d).getDay(); return w===0||w===6;};
+const toast = t=>{const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1900);};
+
+/* ============ BOOT ============ */
+async function boot(){
+  const snap = await get(ref(db, ROOT));
+  const v = snap.val() || {};
+  if(!v.staff){ await set(ref(db, `${ROOT}/staff`), SEED_STAFF); }
+  if(!v.settings){ await set(ref(db, `${ROOT}/settings`), SEED_SETTINGS); }
+  if(!v.auth){
+    const a={}; Object.keys(SEED_STAFF).forEach(k=>a[k]={pin:DEFAULT_PIN});
+    await set(ref(db, `${ROOT}/auth`), a);
+  }
+  const yr = new Date().getFullYear();
+  if(!v.annual || !v.annual[yr]){ await set(ref(db, `${ROOT}/annual/${yr}`), SEED_ANNUAL); }
+
+  STAFF    = (await get(ref(db,`${ROOT}/staff`))).val()    || {};
+  SETTINGS = (await get(ref(db,`${ROOT}/settings`))).val() || {};
+  ANNUAL   = (await get(ref(db,`${ROOT}/annual/${yr}`))).val() || {};
+  renderWho();
+}
+
+/* ============ LOGIN ============ */
+function renderWho(){
+  const box=$("#who"); box.innerHTML="";
+  Object.entries(STAFF).filter(([,s])=>s.active!==false)
+    .sort((a,b)=>(a[1].order||9)-(b[1].order||9))
+    .forEach(([uid,s])=>{
+      const b=document.createElement("button");
+      b.innerHTML=`<span class="a">${s.animal||""}</span><span class="n">${s.name}</span>`;
+      b.onclick=()=>{SEL_UID=uid; $$("#who button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); refreshLoginBtn(); $("#pinRow input")[0]?.focus?.();};
+      box.appendChild(b);
+    });
+}
+const pins=()=>$$("#pinRow input");
+pins().forEach((inp,i)=>{
+  inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,""); if(inp.value&&i<3) pins()[i+1].focus(); refreshLoginBtn(); };
+  inp.onkeydown=e=>{ if(e.key==="Backspace"&&!inp.value&&i>0) pins()[i-1].focus(); if(e.key==="Enter") $("#loginBtn").click(); };
+});
+function refreshLoginBtn(){
+  PIN = pins().map(i=>i.value).join("");
+  $("#loginBtn").disabled = !(SEL_UID && PIN.length===4);
+}
+$("#loginBtn").onclick = async ()=>{
+  const snap = await get(ref(db, `${ROOT}/auth/${SEL_UID}/pin`));
+  if((snap.val()||DEFAULT_PIN) !== PIN){ $("#loginErr").textContent="PIN 不正確"; return; }
+  ME = {uid:SEL_UID, ...STAFF[SEL_UID]};
+  $("#loginErr").textContent="";
+  $("#login").classList.add("hide"); $("#app").classList.remove("hide");
+  $("#avatar").textContent = ME.animal||"";
+  $("#myName").textContent = ME.name;
+  $("#myRole").textContent = ME.role;
+  if(ME.owner){ $("#viewToggle").classList.remove("hide"); }
+  MONTH = nextMonth();                       // 預設看下個月(排休是排未來)
+  bindMonth();
+};
+$("#logout").onclick = ()=>location.reload();
+function nextMonth(){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+1); return ymKey(d); }
+function shiftMonth(k,n){ const [y,m]=k.split("-").map(Number); const d=new Date(y,m-1+n,1); return ymKey(d); }
+
+/* ============ MONTH BINDING ============ */
+function bindMonth(){
+  if(unsub) unsub();
+  unsub = onValue(ref(db, `${ROOT}/months/${MONTH}`), snap=>{
+    const v = snap.val() || {};
+    MDATA = {status:v.status||"open", quota:v.quota??null, closures:v.closures||{}, requests:v.requests||{}};
+    render();
+  });
+}
+$("#ePrev").onclick=()=>{MONTH=shiftMonth(MONTH,-1);bindMonth();};
+$("#eNext").onclick=()=>{MONTH=shiftMonth(MONTH,1);bindMonth();};
+$("#oPrev").onclick=()=>{MONTH=shiftMonth(MONTH,-1);bindMonth();};
+$("#oNext").onclick=()=>{MONTH=shiftMonth(MONTH,1);bindMonth();};
+$("#viewToggle").onclick=()=>{
+  VIEW = VIEW==="emp" ? "owner" : "emp";
+  $("#viewToggle").textContent = VIEW==="emp" ? "老闆檢視" : "我的排休";
+  $("#viewToggle").classList.toggle("on", VIEW==="owner");
+  render();
+};
+
+/* ============ HELPERS ============ */
+const monthDays = k=>{const [y,m]=k.split("-").map(Number); return new Date(y,m,0).getDate();};
+const firstDow  = k=>{const [y,m]=k.split("-").map(Number); return new Date(y,m-1,1).getDay();};
+const myReq     = ()=> (MDATA.requests[ME.uid]) || {};
+const reqOf     = uid=> (MDATA.requests[uid]) || {};
+
+// 必休依 ts 排序,取前 MAX_MUST_PER_DAY 為確定,其餘候補
+function mustRank(dateStr){
+  const rows=[];
+  Object.entries(MDATA.requests).forEach(([uid,days])=>{
+    const r=days?.[dateStr];
+    if(r && r.state==="must") rows.push({uid, ts:r.ts||0});
+  });
+  rows.sort((a,b)=>(a.ts||0)-(b.ts||0));
+  return rows;
+}
+const isWaitlist = (uid,dateStr)=>{
+  const rank=mustRank(dateStr);
+  const i=rank.findIndex(r=>r.uid===uid);
+  return i>=MAX_MUST_PER_DAY;
+};
+const holidayMustCount = uid=>{
+  const [y,m]=MONTH.split("-").map(Number);
+  return Object.entries(reqOf(uid)).filter(([d,r])=>r.state==="must" && isHol(y,m,Number(d))).length;
+};
+const annualLeft = uid=>{ const a=ANNUAL[uid]||{total:0,used:0}; return (a.total||0)-(a.used||0); };
+// 這人這天能不能上(基本設定)
+function baseAllows(uid,day){
+  const s=SETTINGS[uid]||{}; const [y,m]=MONTH.split("-").map(Number);
+  const hol=isHol(y,m,day);
+  return hol ? s.weekend!==false : s.weekday!==false;
+}
+
+/* ============ RENDER ============ */
+function render(){
+  const [y,m]=MONTH.split("-").map(Number);
+  const label=`${y} 年 ${m} 月`;
+  $("#eMonth").textContent=label; $("#oMonth").textContent=label;
+  const owner = ME.owner && VIEW==="owner";
+  $("#empView").classList.toggle("hide", owner);
+  $("#ownerView").classList.toggle("hide", !owner);
+  owner ? renderOwner() : renderEmp();
+}
+
+/* ---------- employee ---------- */
+function renderEmp(){
+  const [y,m]=MONTH.split("-").map(Number);
+  const days=monthDays(MONTH), start=firstDow(MONTH), mine=myReq();
+  const locked = MDATA.status==="locked";
+
+  // due chip
+  const today=new Date(), dueMonth=shiftMonth(MONTH,-1);
+  const [dy,dm]=dueMonth.split("-").map(Number);
+  const due=new Date(dy,dm-1,DUE_DAY);
+  const left=Math.ceil((due-today)/86400000);
+  const chip=$("#eDue");
+  if(locked){ chip.innerHTML=`<span class="chip d">已截止</span>`; }
+  else if(left>=0&&left<=7){ chip.innerHTML=`<span class="chip w">距截止 <span class="num">${left}</span> 天</span>`; }
+  else { chip.innerHTML=`<span class="chip l">${dm}/${DUE_DAY} 截止</span>`; }
+  $("#eLocked").classList.toggle("hide", !locked);
+  if(locked) $("#eLocked").textContent="本月排休已截止並鎖定。要修改請找老闆娘。";
+
+  const hc=holidayMustCount(ME.uid);
+  $("#eHolCnt").textContent=`${hc} / ${MAX_HOLIDAY_MUST}`;
+  $("#eHolLeft").textContent = hc>=MAX_HOLIDAY_MUST ? "· 已達上限" : `· 還可指定 ${MAX_HOLIDAY_MUST-hc} 天`;
+  $("#eCnt").textContent = Object.keys(mine).length;
+
+  const cal=$("#eCal"); cal.innerHTML="";
+  for(let i=0;i<start;i++){ const v=document.createElement("div"); v.className="cell void"; cal.appendChild(v); }
+  for(let d=1; d<=days; d++){
+    const ds=pad(d), r=mine[ds], hol=isHol(y,m,d), closed=!!MDATA.closures[ds];
+    const c=document.createElement("div");
+    c.className="cell"+(hol?" hol":"")+(closed?" closed":"")+(r?` ${r.state}`:"");
+    if(r && r.state==="must" && isWaitlist(ME.uid,ds)) c.classList.add("wait");
+    let tag="";
+    if(closed) tag="店休";
+    else if(r?.state==="must")    tag = r.pool==="annual" ? "特休" : "排休";
+    else if(r?.state==="limited") tag = `${r.window?.start||""}–${r.window?.end||""}`.replace(/:00/g,":00");
+    else if(r?.state==="prefer")  tag = "希望";
+    c.innerHTML=`<span class="d">${d}</span>${tag?`<span class="t">${tag}</span>`:""}`;
+    if(!locked && !closed) c.onclick=()=>openDay(d);
+    cal.appendChild(c);
+  }
+  $("#eSubmit").disabled = locked;
+}
+
+/* ---------- owner ---------- */
+function renderOwner(){
+  const [y,m]=MONTH.split("-").map(Number);
+  const days=monthDays(MONTH);
+  const uids=Object.keys(STAFF).filter(u=>STAFF[u].active!==false)
+    .sort((a,b)=>(STAFF[a].order||9)-(STAFF[b].order||9));
+
+  $("#oStatus").innerHTML = MDATA.status==="locked"
+    ? `<span class="chip d">已鎖定</span>` : `<span class="chip o">收件中</span>`;
+  $("#oLock").textContent = MDATA.status==="locked" ? "解鎖" : "鎖定";
+  $("#oQuota").value = MDATA.quota ?? "";
+
+  const done = uids.filter(u=>Object.keys(reqOf(u)).length>0);
+  const miss = uids.filter(u=>Object.keys(reqOf(u)).length===0);
+  $("#oReport").innerHTML = `已回報 <span class="num">${done.length}/${uids.length}</span>`
+    + (miss.length? ` · 待回報 ${miss.map(u=>STAFF[u].name).join("、")}` : "");
+
+  // quota cards (正職)
+  const q=$("#oQuotaList"); q.innerHTML="";
+  uids.filter(u=>FULLTIME.includes(u)).forEach(u=>{
+    const req=reqOf(u);
+    const off=Object.values(req).filter(r=>r.state==="must").length;
+    const quota=MDATA.quota||0;
+    const pct = quota? Math.min(100, Math.round(off/quota*100)) : 0;
+    const waiting = Object.keys(req).length===0;
+    const el=document.createElement("div");
+    el.className="qr"+(waiting?" wait":"");
+    el.innerHTML = waiting
+      ? `<span class="nm">${STAFF[u].name}<small>${STAFF[u].role}</small></span>
+         <div class="bar2"><i style="width:0"></i></div><span class="qm">待回報</span>`
+      : `<span class="nm">${STAFF[u].name}<small>${STAFF[u].role}</small></span>
+         <div class="bar2${pct>=100?" w":""}"><i style="width:${pct}%"></i></div>
+         <span class="qm">必休 <span class="num">${off}${quota?"/"+quota:""}</span> · 特休剩 <span class="num">${annualLeft(u)}</span> · 假必 <span class="num">${holidayMustCount(u)}/${MAX_HOLIDAY_MUST}</span></span>`;
+    q.appendChild(el);
+  });
+
+  // grid
+  const t=$("#oGrid"); t.innerHTML="";
+  const thead=document.createElement("thead"); const hr=document.createElement("tr");
+  hr.appendChild(document.createElement("th"));
+  for(let d=1;d<=days;d++){
+    const th=document.createElement("th");
+    if(isHol(y,m,d)) th.className="hol";
+    th.innerHTML=`<span class="num">${d}</span>`;
+    hr.appendChild(th);
+  }
+  thead.appendChild(hr); t.appendChild(thead);
+
+  const tb=document.createElement("tbody");
+  uids.forEach(u=>{
+    const tr=document.createElement("tr");
+    const nd=document.createElement("td"); nd.className="nm"; nd.textContent=STAFF[u].name; tr.appendChild(nd);
+    const req=reqOf(u), never=Object.keys(req).length===0;
+    for(let d=1;d<=days;d++){
+      const ds=pad(d), r=req[ds], closed=!!MDATA.closures[ds];
+      const td=document.createElement("td"); td.className="c";
+      if(closed){ td.classList.add("closed"); }
+      else if(never){ td.classList.add("wait"); }
+      else if(r){
+        if(r.state==="must"){
+          td.classList.add(r.pool==="annual"?"annual":"must");
+          td.textContent = r.pool==="annual" ? "特" : "必";
+          if(isWaitlist(u,ds)) td.classList.add("over");
+        } else if(r.state==="limited"){ td.classList.add("limited"); td.textContent="限"; }
+        else if(r.state==="prefer"){ td.classList.add("prefer"); td.textContent="希"; }
+      }
+      td.onclick=()=>openClosure(d);
+      tr.appendChild(td);
+    }
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb);
+
+  // notes
+  const notes=$("#oNotes"); notes.innerHTML="";
+  const push=(cls,html)=>{const n=document.createElement("div");n.className="note "+cls;n.innerHTML=`<span class="dt"></span><span>${html}</span>`;notes.appendChild(n);};
+  let any=false;
+  for(let d=1;d<=days;d++){
+    const ds=pad(d);
+    if(MDATA.closures[ds]) continue;
+    const rank=mustRank(ds);
+    if(rank.length>MAX_MUST_PER_DAY){
+      any=true;
+      const ok=rank.slice(0,MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、");
+      const wl=rank.slice(MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、");
+      push("d", `<b>${m}/${d} 必休已滿</b>——${ok}(依告知順序);${wl} 候補。`);
+    }
+    // 缺人提示:當天可上的人(扣掉必休)
+    const avail = Object.keys(STAFF).filter(u=>STAFF[u].active!==false).filter(u=>{
+      const r=reqOf(u)[ds];
+      if(r?.state==="must") return false;
+      return baseAllows(u,d);
+    });
+    const min = isHol(y,m,d) ? 4 : 3;
+    if(avail.length < min){
+      any=true;
+      const sup = Object.keys(STAFF).filter(u=>reqOf(u)[ds]?.state==="prefer").map(u=>STAFF[u].name);
+      push("w", `<b>${m}/${d} 可上僅 ${avail.length} 人</b>(門檻 ${min})`
+        + (sup.length? `——可支援:${sup.join("、")}(希望排休)。` : `——需調整排休。`));
+    }
+  }
+  if(!any) push("o", `<b>目前沒有衝突</b>——必休未超額,每日可上人力都達門檻。`);
+}
+
+/* ============ DAY MODAL ============ */
+function openDay(d){
+  const [y,m]=MONTH.split("-").map(Number);
+  DAY=pad(d);
+  const cur=myReq()[DAY];
+  DRAFT = cur ? JSON.parse(JSON.stringify(cur)) : {state:null, pool:"normal", window:{start:"06:00",end:"10:00"}};
+  const hol=isHol(y,m,d);
+  $("#dTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
+  $("#dSub").textContent=`星期${"日一二三四五六"[new Date(y,m-1,d).getDay()]} · ${hol?"假日":"平日"}`;
+  $("#dAnnLeft").textContent=`剩 ${annualLeft(ME.uid)} 天`;
+  $("#dClear").classList.toggle("hide", !cur);
+
+  // 假日必休上限提示
+  const hc=holidayMustCount(ME.uid);
+  const blocked = hol && hc>=MAX_HOLIDAY_MUST && cur?.state!=="must";
+  $("#dWarn").innerHTML = blocked
+    ? `<div class="warnbox">你這個月的假日必休已達 ${MAX_HOLIDAY_MUST} 天上限,這天無法再指定必休。可改選「限時可上」或「希望排休」。</div>` : "";
+  $("#dSeg").querySelector('[data-s="must"]').disabled = blocked;
+
+  // 必休人數提示
+  const rank=mustRank(DAY).filter(r=>r.uid!==ME.uid);
+  if(!blocked && rank.length>=MAX_MUST_PER_DAY){
+    $("#dWarn").innerHTML = `<div class="warnbox">這天必休已有 ${rank.map(r=>STAFF[r.uid].name).join("、")},你送出會列為候補(依告知順序)。</div>`;
+  }
+  syncModal();
+  $("#dayMask").classList.remove("hide");
+}
+function syncModal(){
+  $$("#dSeg button").forEach(b=>b.classList.toggle("on", b.dataset.s===DRAFT.state));
+  $$("#dPool button").forEach(b=>{
+    b.classList.toggle("on", b.dataset.p===DRAFT.pool);
+    if(b.dataset.p==="annual") b.disabled = annualLeft(ME.uid)<=0;
+  });
+  $("#dPoolWrap").classList.toggle("hide", DRAFT.state!=="must");
+  $("#dTimeWrap").classList.toggle("hide", DRAFT.state!=="limited");
+  if(DRAFT.state==="limited"){
+    $("#dStart").value=DRAFT.window?.start||"06:00";
+    $("#dEnd").value  =DRAFT.window?.end||"10:00";
+  }
+  $("#dSave").disabled = !DRAFT.state;
+  $("#dSave").textContent = DRAFT.state==="must" ? "確定必休"
+    : DRAFT.state==="limited" ? "確定時間" : DRAFT.state==="prefer" ? "確定" : "確定";
+}
+$$("#dSeg button").forEach(b=> b.onclick=()=>{ DRAFT.state=b.dataset.s; syncModal(); });
+$$("#dPool button").forEach(b=> b.onclick=()=>{ DRAFT.pool=b.dataset.p; syncModal(); });
+$("#dCancel").onclick=()=>$("#dayMask").classList.add("hide");
+$("#dClear").onclick=async()=>{
+  await remove(ref(db, `${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`));
+  $("#dayMask").classList.add("hide"); toast("已清除");
+};
+$("#dSave").onclick=async()=>{
+  if(!DRAFT.state) return;
+  const payload={ state:DRAFT.state, ts:serverTimestamp() };
+  if(DRAFT.state==="must"){ payload.pool=DRAFT.pool; }
+  if(DRAFT.state==="limited"){
+    const s=$("#dStart").value, e=$("#dEnd").value;
+    if(!s||!e||s>=e){ toast("時間不正確"); return; }
+    payload.window={start:s,end:e};
+  }
+  await set(ref(db, `${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`), payload);
+  $("#dayMask").classList.add("hide");
+  toast("已儲存");
+};
+$("#eSubmit").onclick=()=>{
+  const n=Object.keys(myReq()).length;
+  toast(n? `已送出 ${n} 天` : "尚未設定任何一天");
+};
+
+/* ============ OWNER ACTIONS ============ */
+let CDAY=null;
+function openClosure(d){
+  if(!ME.owner) return;
+  CDAY=pad(d);
+  const [y,m]=MONTH.split("-").map(Number);
+  const on=!!MDATA.closures[CDAY];
+  $("#cTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
+  $("#cToggle").textContent = on ? "取消店休" : "設為店休";
+  $("#closeMask").classList.remove("hide");
+}
+$("#cCancel").onclick=()=>$("#closeMask").classList.add("hide");
+$("#cToggle").onclick=async()=>{
+  const on=!!MDATA.closures[CDAY];
+  if(on) await remove(ref(db, `${ROOT}/months/${MONTH}/closures/${CDAY}`));
+  else   await set(ref(db, `${ROOT}/months/${MONTH}/closures/${CDAY}`), {reason:"店休"});
+  $("#closeMask").classList.add("hide");
+  toast(on?"已取消店休":"已設為店休");
+};
+$("#oLock").onclick=async()=>{
+  const next = MDATA.status==="locked" ? "open" : "locked";
+  await update(ref(db, `${ROOT}/months/${MONTH}`), {status:next});
+  toast(next==="locked"?"已鎖定":"已解鎖");
+};
+$("#oQuotaSave").onclick=async()=>{
+  const v=parseInt($("#oQuota").value,10);
+  if(isNaN(v)||v<0||v>31){ toast("請填 0–31"); return; }
+  await update(ref(db, `${ROOT}/months/${MONTH}`), {quota:v});
+  toast("已儲存應休天數");
+};
+
+boot().catch(e=>{ $("#loginErr").textContent="連線失敗,請檢查 Firebase 設定"; console.error(e); });
+</script>
+</body>
+</html>

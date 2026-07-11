@@ -20,21 +20,20 @@
 html{-webkit-text-size-adjust:100%}
 body{background:var(--paper);color:var(--ink);line-height:1.6;
   font-family:"PingFang TC","Noto Sans TC","Microsoft JhengHei",sans-serif;
-  padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 20px)}
+  padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 24px)}
 .num{font-family:"DM Sans",sans-serif;font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select{font-family:inherit;font-size:15px}
 .hide{display:none !important}
 
-/* ---------- shell ---------- */
 .app{max-width:1180px;margin:0 auto;padding:0 14px}
 .bar{display:flex;align-items:center;justify-content:space-between;padding:14px 2px 12px}
 .bar .id{display:flex;align-items:center;gap:9px}
-.bar .av{width:32px;height:32px;border-radius:9px;background:var(--tint);display:flex;align-items:center;
-  justify-content:center;font-size:15px;color:var(--ink2)}
+.bar .av{width:36px;height:36px;flex:none;display:flex;align-items:center;justify-content:center}
+.bar .av img{width:100%;height:100%;object-fit:contain}
 .bar .nm{font-size:15px;font-weight:500;line-height:1.25}
 .bar .rl{font-size:11px;color:var(--ink3)}
-.bar .rt{display:flex;align-items:center;gap:8px}
+.bar .rt{display:flex;align-items:center;gap:7px}
 .mbtn{font-size:12px;padding:6px 12px;border-radius:8px;border:1px solid var(--line);color:var(--ink2);background:var(--surface)}
 .mbtn.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:4px 10px;border-radius:999px;line-height:1.4}
@@ -46,30 +45,30 @@ input,select{font-family:inherit;font-size:15px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:15px}
 .hr{height:1px;background:var(--line);margin:16px 0}
 
-/* ---------- login ---------- */
-#login{max-width:380px;margin:8vh auto 0;padding:0 16px}
-#login .brand{text-align:center;margin-bottom:22px}
+/* login */
+#login{max-width:400px;margin:6vh auto 0;padding:0 16px}
+#login .brand{text-align:center;margin-bottom:20px}
 #login .brand .ey{font-size:11px;letter-spacing:.16em;color:var(--clay);font-weight:500}
 #login .brand h1{font-size:21px;font-weight:500;margin-top:5px}
 #login .brand p{font-size:13px;color:var(--ink2);margin-top:3px}
-.who{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:16px}
-.who button{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px 6px;
-  display:flex;flex-direction:column;align-items:center;gap:5px}
-.who button .a{font-size:21px}
+.who{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:9px;margin-bottom:18px}
+.who button{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 6px 9px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;transition:border-color .12s,background .12s}
+.who button img{width:52px;height:52px;object-fit:contain}
 .who button .n{font-size:13px}
-.who button.on{border-color:var(--ink);background:var(--tint)}
+.who button.on{border-color:var(--clay);background:var(--clay-bg)}
 .pin{display:flex;gap:8px;justify-content:center;margin-bottom:12px}
-.pin input{width:46px;height:54px;text-align:center;font-size:21px;border:1px solid var(--line);
-  border-radius:11px;background:var(--surface);color:var(--ink);font-family:"DM Sans"}
+.pin input{width:48px;height:56px;text-align:center;font-size:22px;border:1px solid var(--line);
+  border-radius:12px;background:var(--surface);color:var(--ink);font-family:"DM Sans"}
 .pin input:focus{outline:none;border-color:var(--ink)}
 .btn{display:block;width:100%;text-align:center;font-size:14px;padding:12px;border-radius:11px}
 .btn.p{background:var(--ink);color:#fff}
-.btn.p:disabled{background:var(--ink3);opacity:.6}
+.btn.p:disabled{background:var(--ink3);opacity:.55}
 .btn.g{border:1px solid var(--line);color:var(--ink2);background:var(--surface)}
 .err{font-size:12px;color:var(--danger);text-align:center;min-height:18px;margin-top:8px}
 
-/* ---------- month head ---------- */
-.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+/* month head */
+.mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
 .mhead .m{display:flex;align-items:center;gap:8px}
 .mhead .m b{font-size:17px;font-weight:500}
 .nav{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
@@ -79,20 +78,21 @@ input,select{font-family:inherit;font-size:15px}
   border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:11px;font-size:12px}
 .meta .k{color:var(--ink2)}
 .meta b{font-weight:500}
-.legend{display:flex;gap:13px;flex-wrap:wrap;padding:0 2px 11px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;padding:0 2px 11px}
 .legend span{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--ink2)}
 .sw{width:12px;height:12px;border-radius:4px;flex:none}
 .sw.must{background:var(--clay)}
 .sw.limited{background:var(--surface);border:1.5px solid var(--clay)}
 .sw.prefer{background:var(--tint);border:1px solid var(--line)}
+.sw.closed{background:var(--ink2)}
 
-/* ---------- calendar ---------- */
+/* calendar */
 .wk{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:5px}
 .wk div{text-align:center;font-size:10px;color:var(--ink3)}
 .wk div:first-child,.wk div:last-child{color:var(--clay)}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
 .cell{aspect-ratio:1/1.04;border-radius:9px;border:1px solid transparent;background:var(--surface);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative}
+  display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}
 .cell.void{background:transparent;border:none}
 .cell .d{font-size:13px;font-family:"DM Sans";font-variant-numeric:tabular-nums}
 .cell .t{font-size:8px;line-height:1.1;margin-top:2px;text-align:center;padding:0 1px}
@@ -105,8 +105,10 @@ input,select{font-family:inherit;font-size:15px}
 .cell.limited .t{color:var(--clay)}
 .cell.prefer{background:var(--tint)}
 .cell.prefer .d,.cell.prefer .t{color:var(--ink3)}
-.cell.closed{background:repeating-linear-gradient(45deg,var(--tint),var(--tint) 3px,var(--paper) 3px,var(--paper) 6px)}
-.cell.closed .d{color:var(--ink3)}
+/* 店休:深色實心,最醒目 */
+.cell.closed{background:var(--ink2);border-color:var(--ink2)}
+.cell.closed .d{color:#fff;opacity:.75;text-decoration:line-through}
+.cell.closed .t{color:#fff;font-weight:500;letter-spacing:.04em}
 .cell.wait::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:999px;background:var(--warn)}
 .foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .foot .c{font-size:12px;color:var(--ink2)}
@@ -114,12 +116,13 @@ input,select{font-family:inherit;font-size:15px}
 .foot .btn{width:auto;padding:9px 20px;font-size:13px}
 .locked{background:var(--tint);border-radius:10px;padding:10px 12px;font-size:12px;color:var(--ink2);margin-bottom:11px}
 
-/* ---------- modal ---------- */
+/* modal */
 .mask{position:fixed;inset:0;background:rgba(43,40,36,.42);display:flex;align-items:flex-end;
-  justify-content:center;z-index:50;padding:0}
+  justify-content:center;z-index:50;overflow-y:auto}
 .mask.c{align-items:center;padding:16px}
-.modal{background:var(--surface);width:100%;max-width:420px;border-radius:18px 18px 0 0;padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
-.mask.c .modal{border-radius:16px}
+.modal{background:var(--surface);width:100%;max-width:440px;border-radius:18px 18px 0 0;
+  padding:18px 16px calc(18px + env(safe-area-inset-bottom))}
+.mask.c .modal{border-radius:16px;max-height:88vh;overflow-y:auto}
 .mh{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:3px}
 .mh .dd{font-size:17px;font-weight:500}
 .mh .wd{font-size:12px;color:var(--ink2)}
@@ -128,6 +131,7 @@ input,select{font-family:inherit;font-size:15px}
 .seg button{font-size:12px;padding:10px 2px;border-radius:9px;border:1px solid var(--line);
   background:var(--surface);color:var(--ink2)}
 .seg button.on{background:var(--clay);border-color:var(--clay);color:#fff}
+.seg button:disabled{opacity:.4}
 .lab{font-size:11px;color:var(--ink2);margin-bottom:6px}
 .pool{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
 .pool button{font-size:12px;padding:10px 6px;border-radius:9px;border:1px solid var(--line);
@@ -137,8 +141,6 @@ input,select{font-family:inherit;font-size:15px}
 .pool button small{font-size:10px;color:var(--ink3)}
 .pool button:disabled{opacity:.45}
 .times{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
-.times label{display:block}
-.times .lab{margin-bottom:5px}
 .times input{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;
   background:var(--surface);color:var(--ink);font-family:"DM Sans"}
 .mnote{font-size:11px;color:var(--ink3);margin:-6px 0 12px;line-height:1.5}
@@ -147,7 +149,7 @@ input,select{font-family:inherit;font-size:15px}
 .mfoot .btn.rm{color:var(--danger);border:1px solid var(--danger-bg);background:var(--danger-bg)}
 .warnbox{background:var(--warn-bg);color:#7a5a20;font-size:11.5px;padding:9px 11px;border-radius:9px;margin-bottom:12px;line-height:1.5}
 
-/* ---------- owner ---------- */
+/* owner */
 .quota{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px;margin-bottom:14px}
 .qr{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;padding:9px 11px;
   border:1px solid var(--line);border-radius:11px;background:var(--paper)}
@@ -165,15 +167,18 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .grid th{font-size:10px;color:var(--ink3);font-weight:400;padding:1px;min-width:26px}
 .grid th .num{font-weight:500;color:var(--ink2);display:block}
 .grid th.hol .num{color:var(--clay)}
-.grid td.nm{font-size:11px;color:var(--ink2);text-align:right;padding-right:4px;white-space:nowrap;position:sticky;left:0;background:var(--surface)}
+.grid th.closed .num{color:#fff}
+.grid th.closed{background:var(--ink2);border-radius:5px}
+.grid td.nm{font-size:11px;color:var(--ink2);text-align:right;padding-right:4px;white-space:nowrap;
+  position:sticky;left:0;background:var(--surface);z-index:2}
 .grid td.c{height:26px;min-width:26px;border-radius:6px;background:var(--paper);text-align:center;
   font-size:9px;font-family:"DM Sans";color:var(--ink3)}
 .grid td.c.must{background:var(--clay);color:#fff}
 .grid td.c.annual{background:#e9dfd3;color:var(--clay)}
 .grid td.c.limited{border:1px solid var(--clay);color:var(--clay);background:var(--surface)}
 .grid td.c.prefer{background:var(--tint);color:var(--ink3)}
-.grid td.c.closed{background:repeating-linear-gradient(45deg,var(--tint),var(--tint) 3px,var(--paper) 3px,var(--paper) 6px)}
-.grid td.c.wait{background:repeating-linear-gradient(45deg,var(--tint),var(--tint) 3px,var(--surface) 3px,var(--surface) 6px)}
+.grid td.c.closed{background:var(--ink2);color:#fff}
+.grid td.c.waitrow{background:repeating-linear-gradient(45deg,var(--tint),var(--tint) 3px,var(--surface) 3px,var(--surface) 6px)}
 .grid td.c.over{outline:1.5px solid var(--warn)}
 .notes{margin-top:12px;display:flex;flex-direction:column;gap:7px}
 .note{display:flex;gap:8px;font-size:11.5px;padding:9px 11px;border-radius:9px;line-height:1.5}
@@ -185,23 +190,48 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .note.w .dt{background:var(--warn)}
 .note.o .dt{background:var(--ok)}
 .note b{font-weight:500}
-.cap{font-size:11px;color:var(--ink3);margin-top:9px;line-height:1.6}
-.sechd{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px}
+.cap{font-size:11px;color:var(--ink3);margin-top:9px;line-height:1.7}
+.sechd{display:flex;align-items:center;justify-content:space-between;margin:0 2px 10px;gap:8px;flex-wrap:wrap}
 .sechd h2{font-size:14px;font-weight:500}
 .sechd .sub{font-size:11px;color:var(--ink2)}
 .frow{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12px;color:var(--ink2)}
 .frow input{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:8px;background:var(--paper);
   color:var(--ink);font-family:"DM Sans";text-align:center}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:26px;background:var(--ink);color:#fff;
-  font-size:13px;padding:10px 18px;border-radius:999px;z-index:90;opacity:0;transition:opacity .2s}
+  font-size:13px;padding:10px 18px;border-radius:999px;z-index:90;opacity:0;transition:opacity .2s;pointer-events:none}
 .toast.on{opacity:1}
-.spin{text-align:center;padding:40px 0;color:var(--ink3);font-size:13px}
+
+/* staff admin */
+.slist{display:flex;flex-direction:column;gap:8px}
+.srow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:10px 11px;
+  border:1px solid var(--line);border-radius:11px;background:var(--paper)}
+.srow img{width:34px;height:34px;object-fit:contain}
+.srow .info .n{font-size:13px;font-weight:500}
+.srow .info .d{font-size:10.5px;color:var(--ink3);line-height:1.5}
+.srow.off{opacity:.5}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.fgrid.one{grid-template-columns:1fr}
+.fld label{display:block;font-size:11px;color:var(--ink2);margin-bottom:5px}
+.fld input,.fld select{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;
+  background:var(--surface);color:var(--ink)}
+.apick{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.apick button{border:1px solid var(--line);border-radius:10px;padding:6px 2px;background:var(--surface);
+  display:flex;flex-direction:column;align-items:center;gap:2px}
+.apick button img{width:36px;height:36px;object-fit:contain}
+.apick button span{font-size:9px;color:var(--ink3)}
+.apick button.on{border-color:var(--clay);background:var(--clay-bg)}
+.dchk{display:flex;gap:14px;margin-bottom:12px;font-size:12px;color:var(--ink2)}
+.dchk label{display:flex;align-items:center;gap:6px}
+.dchk input{width:auto}
+.wdays{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:6px}
+.wdays button{border:1px solid var(--line);border-radius:8px;padding:8px 2px;background:var(--surface);
+  font-size:12px;color:var(--ink2)}
+.wdays button.on{background:var(--tint);border-color:var(--ink);color:var(--ink)}
 @media(min-width:760px){.cell{aspect-ratio:1/.72}}
 </style>
 </head>
 <body>
 
-<!-- ================= LOGIN ================= -->
 <div id="login">
   <div class="brand">
     <div class="ey">JENKA ROSTER</div>
@@ -210,17 +240,14 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   </div>
   <div class="who" id="who"></div>
   <div class="pin" id="pinRow">
-    <input inputmode="numeric" maxlength="1" data-i="0">
-    <input inputmode="numeric" maxlength="1" data-i="1">
-    <input inputmode="numeric" maxlength="1" data-i="2">
-    <input inputmode="numeric" maxlength="1" data-i="3">
+    <input inputmode="numeric" maxlength="1"><input inputmode="numeric" maxlength="1">
+    <input inputmode="numeric" maxlength="1"><input inputmode="numeric" maxlength="1">
   </div>
   <div class="err" id="loginErr"></div>
   <button class="btn p" id="loginBtn" disabled>登入</button>
-  <div class="cap" style="text-align:center;margin-top:12px">預設 PIN 為 1234,登入後可自行修改</div>
+  <div class="cap" style="text-align:center;margin-top:12px">預設 PIN 為 1234</div>
 </div>
 
-<!-- ================= APP ================= -->
 <div class="app hide" id="app">
   <div class="bar">
     <div class="id">
@@ -228,12 +255,13 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div><div class="nm" id="myName"></div><div class="rl" id="myRole"></div></div>
     </div>
     <div class="rt">
-      <button class="mbtn hide" id="viewToggle">老闆檢視</button>
+      <button class="mbtn hide" id="navStaff">員工設定</button>
+      <button class="mbtn hide" id="navOwner">老闆檢視</button>
       <button class="mbtn" id="logout">登出</button>
     </div>
   </div>
 
-  <!-- ---------- EMPLOYEE ---------- -->
+  <!-- employee -->
   <div id="empView">
     <div class="card">
       <div class="mhead">
@@ -253,6 +281,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <span><i class="sw must"></i>必休</span>
         <span><i class="sw limited"></i>限時可上</span>
         <span><i class="sw prefer"></i>希望排休</span>
+        <span><i class="sw closed"></i>店休</span>
       </div>
       <div class="wk"><div>日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div></div>
       <div class="cal" id="eCal"></div>
@@ -261,10 +290,10 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <button class="btn p" id="eSubmit">送出</button>
       </div>
     </div>
-    <div class="cap">點任一天即可設定。必休每天最多 2 人,依送出時間先後;額滿會排候補(右上小點)。</div>
+    <div class="cap">點任一天即可設定。必休每天最多 2 人,依送出時間先後;額滿會排候補(格子右上小點)。</div>
   </div>
 
-  <!-- ---------- OWNER ---------- -->
+  <!-- owner -->
   <div id="ownerView" class="hide">
     <div class="card">
       <div class="mhead">
@@ -278,34 +307,44 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
           <button class="mbtn" id="oLock">鎖定</button>
         </div>
       </div>
-
       <div class="frow" style="margin-bottom:13px">
-        <span>本月應休天數(依政府行事曆紅字)</span>
+        <span>本月應休天數</span>
         <input class="num" id="oQuota" inputmode="numeric" placeholder="—">
-        <span style="color:var(--ink3)">天 · 套用到所有正職</span>
+        <span style="color:var(--ink3)">天(依政府行事曆)· 套用所有正職</span>
         <button class="mbtn" id="oQuotaSave">儲存</button>
       </div>
-
       <div class="sechd"><h2>回報狀況</h2><span class="sub" id="oReport"></span></div>
       <div class="quota" id="oQuotaList"></div>
-
       <div class="hr"></div>
-      <div class="sechd"><h2>排休彙整</h2><span class="sub">必休鎖定 · 點格子可標店休</span></div>
+      <div class="sechd"><h2>排休彙整</h2><span class="sub">點格子可設店休 · 必休已鎖定</span></div>
       <div class="gwrap"><table class="grid" id="oGrid"></table></div>
       <div class="cap">
         <span style="color:var(--clay)">必</span> 必休 ·
         <span style="color:var(--clay)">特</span> 特休 ·
         <span style="color:var(--clay)">限</span> 限時可上 ·
-        希 希望排休 · 斜線 待回報/店休 · 黃框 候補(必休已滿)
+        希 希望排休 · <span style="background:var(--ink2);color:#fff;padding:0 4px;border-radius:3px">休</span> 店休 ·
+        斜線 待回報 · 黃框 候補
       </div>
       <div class="notes" id="oNotes"></div>
+    </div>
+  </div>
+
+  <!-- staff admin -->
+  <div id="staffView" class="hide">
+    <div class="card">
+      <div class="sechd">
+        <h2>員工資料</h2>
+        <button class="mbtn on" id="sAdd">新增員工</button>
+      </div>
+      <div class="slist" id="sList"></div>
+      <div class="cap">點任一位可編輯:名字、身分、動物、可上日型、固定時間窗、每週固定希望排休、特休天數、PIN。</div>
     </div>
   </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
-<!-- ================= MODALS ================= -->
+<!-- day modal -->
 <div class="mask hide" id="dayMask">
   <div class="modal">
     <div class="mh"><div class="dd" id="dTitle"></div><div class="wd" id="dSub"></div></div>
@@ -338,10 +377,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   </div>
 </div>
 
+<!-- closure modal -->
 <div class="mask c hide" id="closeMask">
   <div class="modal">
     <div class="mh"><div class="dd" id="cTitle"></div><div class="wd">店休設定</div></div>
-    <div class="mhint">這天全店不營業,不排班。</div>
+    <div class="mhint">設為店休後,這天全店不營業、不排班,月曆會標成深色。</div>
     <div class="mfoot">
       <button class="btn g" id="cCancel">取消</button>
       <button class="btn p" id="cToggle">設為店休</button>
@@ -349,204 +389,294 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   </div>
 </div>
 
+<!-- staff edit modal -->
+<div class="mask c hide" id="staffMask">
+  <div class="modal">
+    <div class="mh"><div class="dd" id="stTitle">編輯員工</div>
+      <button class="mbtn" id="stDel" style="color:var(--danger)">停用</button></div>
+    <div class="mhint">動物頭像會顯示在登入頁與班表。</div>
+    <div class="fgrid">
+      <div class="fld"><label>名字</label><input id="stName" placeholder="例:小明"></div>
+      <div class="fld"><label>身分</label>
+        <select id="stRole"><option>正職</option><option>工讀</option><option>老闆</option><option>老闆娘</option></select>
+      </div>
+    </div>
+    <div class="lab">動物頭像</div>
+    <div class="apick" id="stAnimals"></div>
+    <div class="lab">可上的日型</div>
+    <div class="dchk">
+      <label><input type="checkbox" id="stWeekday"> 平日</label>
+      <label><input type="checkbox" id="stWeekend"> 假日</label>
+    </div>
+    <div class="lab">固定時間窗(長期,留空＝整天可上)</div>
+    <div class="fgrid">
+      <div class="fld"><label>最早到</label><input type="time" id="stWinS"></div>
+      <div class="fld"><label>最晚走</label><input type="time" id="stWinE"></div>
+    </div>
+    <div class="lab">每週固定希望排休</div>
+    <div class="wdays" id="stWeekly"></div>
+    <div class="cap" style="margin:0 0 12px">點選星期,系統每月自動帶入「希望排休」。</div>
+    <div class="fgrid">
+      <div class="fld"><label>本年特休(天)</label><input class="num" id="stAnnTotal" inputmode="numeric" placeholder="0"></div>
+      <div class="fld"><label>已用特休(天)</label><input class="num" id="stAnnUsed" inputmode="numeric" placeholder="0"></div>
+    </div>
+    <div class="fgrid one">
+      <div class="fld"><label>PIN(4 位數)</label><input class="num" id="stPin" inputmode="numeric" maxlength="4" placeholder="1234"></div>
+    </div>
+    <div class="mfoot">
+      <button class="btn g" id="stCancel">取消</button>
+      <button class="btn p" id="stSave">儲存</button>
+    </div>
+  </div>
+</div>
+
 <script type="module">
+/* ===== 動物頭像(內嵌,無需外部檔案) ===== */
+const ANIMALS = {
+  lion: "data:image/png;base64,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",
+  sheep: "data:image/png;base64,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",
+  penguin: "data:image/png;base64,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",
+  squirrel: "data:image/png;base64,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",
+  koala: "data:image/png;base64,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",
+  frog: "data:image/png;base64,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",
+  rabbit: "data:image/png;base64,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",
+  giraffe: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAHAAAABwCAMAAADxPgR5AAAAwFBMVEVmWyKdj2N6c2hhV0VgKB9hUTvhxXyIa0hfUjxfUTyPc1XkzIT/AAD//wAxIwf///9FOiiqmGZIPDRpWUFlV0HTq2fQvYD//3+/fz//f3//v38AAAD82YpjVkNVSTr+5ZDNqGZcUkGVdk0+Pj5VVVWjekxWSzdzZUvRtnRcUD1VSTRWSTS3p3HaxoNVSDJVSTUAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAACHmGbHAAAAMHRSTlMX/Qn9D1b9/t6mDv0BAQ4Bawz9aJz9/QIIAgQA/v36/f3+/gQD/tD9/fqOcv39T63fAhRTAAAIVUlEQVR42u1a6ZKjOAw2R9JJujvpmZ49AXOEcAZ4/7dbSzZgEptgktqqrVr/mJ6KjT5L1mVLxPuXB/kfcBgfhOhWE5KSjxcD2in/m95PpZ52aj0gW3Yg7hFWK1ghbnu0X8qh7dlVSdnI6pN3S7rNKGWT+80iamQZXk0DMbqbL+wuFjNxZ7+Iw9SrOEX8NyMSj6nbyVMH7/QCwNRrgV4cB7ED/+lGQNxKzKcAsXqsOUs4PGTIQ5Jc3oAVSnqyrkco4OXJJXmL+ZT9NCBjsAS8yyW5XC5AtvLOfOrs1bCVtwuMJA6kqScAz3iCccIGg3xjZLM/hr10uBU2w6ZymHqB0hB+ToIq8EF/CGO0ETBH1tkUO8bMfsUZCjY4XXZkDPBT4rAHfAPAo/cqkV4SFCpS/SFP4V5QpI4k7acANwCYWwgIatr1XwmlSZD7JMap1BCQpGcc8neEIiKKjf23HMziw7MpV2A2h8bfDlr62RMic4CT7Z3tiaOhoDdManElGz6w6MBemE+IB50hZy1VcjND2rqu6k1LyLD00yMZei6ho5NP3IwbIth/b/eIapN6U7PRkinKlMO2oyX3jSXN9mTYnd0JU2RUR4nCXlCmCQIG2QbIIcBmX5bcv5Z0t5GZnABWQ0zga3ct6VfsmOTeuM7Uozex8XzjgfUzl9K+nNCJMylXIFIMqoLbUWYtkkD9d5jk8njivs7g9kBp0AERhs/0qKND+OgRJR9LJJfJ52gcs3+oIxYzwbpc/0FP0QxvbHQA9D7Y3mrBHcZrJCVi2h2HTDPYsQfXxvf9bWHlPWZZw6pNzN0bcnI+HwmM1E33I+cdRA8eHgMGY10LH0hZyHDdHyOZnAbN/RBWhWy8AyaP5HCSsPEEAakrHXvGAUGEFdsWZ486VgM0fKR1pTKL498vtpgWfJEALXIai0h+GLWxrOqvav9r/+tXVX+XXGdg1TfGMeDO8sORjh86FHfpTgDPILSANr48wvAaI5M74qG9cXcS94MrBzNDjIUEPRKTUhNOqYBQ6UbIdASE06Y3a5mAHX7oPzqOFCgGZBhAkuNZNyQEYG8ZZFRS+Pl6u5ovZ4hZLKu5AzpInSFhwx/VeH6YUMk/kYmLpsnd8h6x1z60mFyMAIGlrchKMAyQC1ODO08DDpO++3pERjtPrKLhWhyiGhZXK4EJseKq2DBq6eAtyGjDtVoivZpRR1Z2SZdD/3crQMifqq99NGZya4c85WN0f1d9wywyv96BTSwoYWwqd4vy6U73noaHPRr7KqpFowMbMJur6vy4QMdUVlYabkc0UCE+gBNs6vDkjJzI4Rc9E42Lx9SXjbC3qcN4ySOTgF9zXbP88CVwTc5tU74AkGmCtueIsdWEYRg+heaDHk01VJW1iYsg00oravz3VVjss+YqLAXjRKpPE11vk40+JXbyFYANxNXe/5TVnzNZG57j4ZeUkahNeZ7BXHKFu+9bCKJ4kyB1tut9o7MCMB4yos3Jcx+n+im8WFT7XaBzdQ8AuSnQXcXg7jN/1d2C4Kof4HicNVoDHGbu3+qnG81lJj2nx2wVg4JFZgskNbk9nTFrpKucTgMy3Wsu30R7s8e75jrbz0vpErkMkF0aypUSHZMY2wAwfUKifrgFmdZqmZK5e3aw1pPiG5nZlRvufaqUykimHyaA6qRxISCE3bJV3veJRqJf93m4wXin2lcpoj/COFgfDcEw9ieyGPDkPXOE/SEexPvRkjPEI5xYIcT/cC6DmiyOtJZI1FZIbu5uPstPgkDvB6w8n0yid2tVh0hmzL6ZqAGdCccsCyqnk4FOa4haZ/Y3Zi+CXDwXAZ3bsN8tDk/ouUvZc4u8QW0oeB+bXi5xD9nncsO/VdLQWQFIl5vFXfAVV4Qg1DqWqby5mtoKmRJ1WeTeseWQN2qiR5j/LOlPeX1Y6Jybmmui8KRWnjQzZuFMN4PO7fsuZ9MBot0X4Zxt+w8mY01IVAG63rfm9m0YEquFSiNelp+6QqEd7Y0Ag/ftdiWT2+3WB1PJFgN+AWARsVEYY27hs+g3Y8CYA0bR1kyy4qsCAW0TwFx8Gm2NErZIBjys4TCKTBiMZMChhGMIuDVncAA8GQBGw8fGJ2jMIZrFGsBoArhcaV4AmKNZfBoA7p4CjODivVtshxt236bRCqUZzjDCEsRCQPE6bBVPmEWky6Jm4mEP6K8xfMskHp6waECTwhhvcKWFZRLxeRKFll+siBfss9+iN/klf0Feim+1xepouN0GpUmayMu+uuvhpOqi01ZqlHmLmoL62Sssrn0yFYaNOq/iuXhr8DAEqbc67Q2tn5QmAjqgmocOKMxRg1cM8SykJBaP0oZ0PNYyaHID5rVdJYu8sINbabRyd/hD8PJUvy+b5JoihsOPDgqM2ruGpodA26nAWVSWPoprr53Xqx/qSxUmL1Hsd6w+Kk1jtAtlqQJvv0GtaZIg3tzr3orXr5Bdh/FpnZg2f7i8P8HwdUjg6XuVyExrEqHGr9BhgTfXstW2KhHvMaKz9JbRl352tb41isx20rQC0VpW7Sr4S0BZz3TVkPneHdFnwmtDD0o/V1H3p3N4DzqGmFSrcqgNNZqSJfxayKWf4/oWJRt6HYfaUJBYLCKHN4OBQRlYbKwi861tD3uiGJNDJyTWuIM8sdi4sgF/c/y1r8VAF0X6dOeeZ9fZWI/CNhJ5jDX1jjwmuKz70vurrWgZzA2aVaRvT3q+oRVO5bCpO3ZSu3usHaVdTU7e6xpagUtcaLvtV1V1u13GpZllu66qWoJ8nRfRMuiCTgeKJ9c7Evd8PB778ot9fm2P8OjRoT1uSoD9YBtQWN1Y/vGx7rv/W+f/+4D/AJdfSMluTUl2AAAAAElFTkSuQmCC",
+  hippo: "data:image/png;base64,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",
+};
+const ANIMAL_ZH = {lion:"獅子",sheep:"羊",penguin:"企鵝",squirrel:"松鼠",koala:"無尾熊",frog:"青蛙",rabbit:"兔子",giraffe:"長頸鹿",hippo:"河馬"};
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, get, set, update, remove, onValue, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-const firebaseConfig={
-  apiKey:"AIzaSyDoSPSDr6DfQNa7DHV9Z4xl0Dkc36kd69o",
-  authDomain:"jenka-inventory.firebaseapp.com",
-  databaseURL:"https://jenka-inventory-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId:"jenka-inventory",
-  storageBucket:"jenka-inventory.firebasestorage.app",
-  messagingSenderId:"1051643046922",
-  appId:"1:1051643046922:web:f0c0a053aabe88581643f3"
+/* ============ CONFIG — 換成 jenka-inventory 專案的設定 ============ */
+const firebaseConfig = {
+  apiKey: "REPLACE_ME",
+  authDomain: "jenka-inventory.firebaseapp.com",
+  databaseURL: "https://jenka-inventory-default-rtdb.firebaseio.com",
+  projectId: "jenka-inventory",
+  storageBucket: "jenka-inventory.appspot.com",
+  messagingSenderId: "REPLACE_ME",
+  appId: "REPLACE_ME"
 };
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);
 const ROOT = "jenka-roster";
 
-/* ============ SEED (首次執行寫入,之後以 Firebase 為準) ============ */
-const SEED_STAFF = {
-  jen:  {name:"Jen",   role:"老闆",   animal:"獅",   order:1, active:true},
-  kaka: {name:"KaKa",  role:"老闆娘", animal:"羊",   order:2, active:true, owner:true},
-  peiyu:{name:"珮羽",  role:"正職",   animal:"企鵝", order:3, active:true},
-  roxi: {name:"若瑄",  role:"正職",   animal:"松鼠", order:4, active:true},
-  ai:   {name:"小愛",  role:"工讀",   animal:"無尾熊",order:5, active:true},
-  ruru: {name:"汝汝",  role:"工讀",   animal:"青蛙", order:6, active:true},
-  liang:{name:"亮亮",  role:"工讀",   animal:"兔子", order:7, active:true}
-};
-// 基本設定:長期常態(每月自動帶入)
-const SEED_SETTINGS = {
-  jen:  {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
-  kaka: {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
-  peiyu:{weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
-  roxi: {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
-  // 小愛:平日不可、假日全天(暑假平日到 10:30 → 由當月填,不寫進基本設定)
-  ai:   {weekday:false,weekend:true,  window:null,                      weeklyAvoid:[]},
-  // 汝汝:8月起可全天排
-  ruru: {weekday:true, weekend:true,  window:null,                      weeklyAvoid:[]},
-  // 亮亮:6:00–10:00,每週一固定希望排休
-  liang:{weekday:true, weekend:true,  window:{start:"06:00",end:"10:00"}, weeklyAvoid:[1]}
-};
-const SEED_ANNUAL = { peiyu:{total:0,used:0}, roxi:{total:0,used:0}, jen:{total:0,used:0}, kaka:{total:0,used:0}, ai:{total:0,used:0}, ruru:{total:0,used:0}, liang:{total:0,used:0} };
+/* ============ CONSTANTS ============ */
 const DEFAULT_PIN = "1234";
-const FULLTIME = ["peiyu","roxi"];         // 需檢核月休天數的正職
-const MAX_MUST_PER_DAY = 2;                // 每天必休上限
-const MAX_HOLIDAY_MUST = 2;                // 每人每月假日必休上限
-const DUE_DAY = 20;                        // 截止日
+const MAX_MUST_PER_DAY = 2;
+const MAX_HOLIDAY_MUST = 2;
+const DUE_DAY = 20;
+const MIN_STAFF = {weekday:3, holiday:4};   // 當日可上人力門檻
+
+const SEED_STAFF = {
+  jen:  {name:"Jen",  role:"老闆",   animal:"lion",     order:1, active:true},
+  kaka: {name:"KaKa", role:"老闆娘", animal:"sheep",    order:2, active:true, owner:true},
+  peiyu:{name:"珮羽", role:"正職",   animal:"penguin",  order:3, active:true},
+  roxi: {name:"若瑄", role:"正職",   animal:"squirrel", order:4, active:true},
+  ai:   {name:"小愛", role:"工讀",   animal:"koala",    order:5, active:true},
+  ruru: {name:"汝汝", role:"工讀",   animal:"frog",     order:6, active:true},
+  liang:{name:"亮亮", role:"工讀",   animal:"rabbit",   order:7, active:true}
+};
+const SEED_SETTINGS = {
+  jen:  {weekday:true,  weekend:true, window:null, weeklyAvoid:[]},
+  kaka: {weekday:true,  weekend:true, window:null, weeklyAvoid:[]},
+  peiyu:{weekday:true,  weekend:true, window:null, weeklyAvoid:[]},
+  roxi: {weekday:true,  weekend:true, window:null, weeklyAvoid:[]},
+  ai:   {weekday:false, weekend:true, window:null, weeklyAvoid:[]},
+  ruru: {weekday:true,  weekend:true, window:null, weeklyAvoid:[]},
+  liang:{weekday:true,  weekend:true, window:{start:"06:00",end:"10:00"}, weeklyAvoid:[1]}
+};
 
 /* ============ STATE ============ */
-let ME=null, STAFF={}, SETTINGS={}, ANNUAL={}, MONTH=null;
-let MDATA={status:"open", quota:null, closures:{}, requests:{}};
+let ME=null, STAFF={}, SETTINGS={}, ANNUAL={}, AUTH={}, YEAR=new Date().getFullYear();
+let MONTH=null, MDATA={status:"open",quota:null,closures:{},requests:{}};
 let VIEW="emp", SEL_UID=null, PIN="", DAY=null, DRAFT=null, unsub=null;
+let EDIT_UID=null, EDIT_DRAFT=null;
 
 const $  = s=>document.querySelector(s);
 const $$ = s=>[...document.querySelectorAll(s)];
 const pad = n=>String(n).padStart(2,"0");
 const ymKey = d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const isHol = (y,m,d)=>{const w=new Date(y,m-1,d).getDay(); return w===0||w===6;};
+const dowOf = (y,m,d)=> new Date(y,m-1,d).getDay();
 const toast = t=>{const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1900);};
+const avatarOf = key => ANIMALS[key] || ANIMALS.rabbit;
 
 /* ============ BOOT ============ */
 async function boot(){
   const snap = await get(ref(db, ROOT));
   const v = snap.val() || {};
-  if(!v.staff){ await set(ref(db, `${ROOT}/staff`), SEED_STAFF); }
-  if(!v.settings){ await set(ref(db, `${ROOT}/settings`), SEED_SETTINGS); }
+  if(!v.staff)    await set(ref(db,`${ROOT}/staff`), SEED_STAFF);
+  if(!v.settings) await set(ref(db,`${ROOT}/settings`), SEED_SETTINGS);
   if(!v.auth){
     const a={}; Object.keys(SEED_STAFF).forEach(k=>a[k]={pin:DEFAULT_PIN});
-    await set(ref(db, `${ROOT}/auth`), a);
+    await set(ref(db,`${ROOT}/auth`), a);
   }
-  const yr = new Date().getFullYear();
-  if(!v.annual || !v.annual[yr]){ await set(ref(db, `${ROOT}/annual/${yr}`), SEED_ANNUAL); }
-
-  STAFF    = (await get(ref(db,`${ROOT}/staff`))).val()    || {};
-  SETTINGS = (await get(ref(db,`${ROOT}/settings`))).val() || {};
-  ANNUAL   = (await get(ref(db,`${ROOT}/annual/${yr}`))).val() || {};
+  if(!v.annual || !v.annual[YEAR]){
+    const an={}; Object.keys(SEED_STAFF).forEach(k=>an[k]={total:0,used:0});
+    await set(ref(db,`${ROOT}/annual/${YEAR}`), an);
+  }
+  await reloadRefs();
   renderWho();
+}
+async function reloadRefs(){
+  STAFF    = (await get(ref(db,`${ROOT}/staff`))).val()          || {};
+  SETTINGS = (await get(ref(db,`${ROOT}/settings`))).val()       || {};
+  ANNUAL   = (await get(ref(db,`${ROOT}/annual/${YEAR}`))).val() || {};
+  AUTH     = (await get(ref(db,`${ROOT}/auth`))).val()           || {};
 }
 
 /* ============ LOGIN ============ */
 function renderWho(){
   const box=$("#who"); box.innerHTML="";
   Object.entries(STAFF).filter(([,s])=>s.active!==false)
-    .sort((a,b)=>(a[1].order||9)-(b[1].order||9))
+    .sort((a,b)=>(a[1].order||99)-(b[1].order||99))
     .forEach(([uid,s])=>{
       const b=document.createElement("button");
-      b.innerHTML=`<span class="a">${s.animal||""}</span><span class="n">${s.name}</span>`;
-      b.onclick=()=>{SEL_UID=uid; $$("#who button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); refreshLoginBtn(); $("#pinRow input")[0]?.focus?.();};
+      b.innerHTML=`<img src="${avatarOf(s.animal)}" alt=""><span class="n">${s.name}</span>`;
+      b.onclick=()=>{
+        SEL_UID=uid;
+        $$("#who button").forEach(x=>x.classList.remove("on"));
+        b.classList.add("on"); refreshLoginBtn();
+        $$("#pinRow input")[0].focus();
+      };
       box.appendChild(b);
     });
 }
-const pins=()=>$$("#pinRow input");
-pins().forEach((inp,i)=>{
-  inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,""); if(inp.value&&i<3) pins()[i+1].focus(); refreshLoginBtn(); };
-  inp.onkeydown=e=>{ if(e.key==="Backspace"&&!inp.value&&i>0) pins()[i-1].focus(); if(e.key==="Enter") $("#loginBtn").click(); };
+$$("#pinRow input").forEach((inp,i,arr)=>{
+  inp.oninput=()=>{ inp.value=inp.value.replace(/\D/g,""); if(inp.value&&i<3) arr[i+1].focus(); refreshLoginBtn(); };
+  inp.onkeydown=e=>{
+    if(e.key==="Backspace"&&!inp.value&&i>0) arr[i-1].focus();
+    if(e.key==="Enter"&&!$("#loginBtn").disabled) $("#loginBtn").click();
+  };
 });
 function refreshLoginBtn(){
-  PIN = pins().map(i=>i.value).join("");
+  PIN=$$("#pinRow input").map(i=>i.value).join("");
   $("#loginBtn").disabled = !(SEL_UID && PIN.length===4);
 }
-$("#loginBtn").onclick = async ()=>{
-  const snap = await get(ref(db, `${ROOT}/auth/${SEL_UID}/pin`));
-  if((snap.val()||DEFAULT_PIN) !== PIN){ $("#loginErr").textContent="PIN 不正確"; return; }
-  ME = {uid:SEL_UID, ...STAFF[SEL_UID]};
+$("#loginBtn").onclick = ()=>{
+  const want = AUTH[SEL_UID]?.pin || DEFAULT_PIN;
+  if(String(want)!==PIN){ $("#loginErr").textContent="PIN 不正確"; return; }
+  ME={uid:SEL_UID, ...STAFF[SEL_UID]};
   $("#loginErr").textContent="";
-  $("#login").classList.add("hide"); $("#app").classList.remove("hide");
-  $("#avatar").textContent = ME.animal||"";
-  $("#myName").textContent = ME.name;
-  $("#myRole").textContent = ME.role;
-  if(ME.owner){ $("#viewToggle").classList.remove("hide"); }
-  MONTH = nextMonth();                       // 預設看下個月(排休是排未來)
+  $("#login").classList.add("hide");
+  $("#app").classList.remove("hide");
+  $("#avatar").innerHTML=`<img src="${avatarOf(ME.animal)}" alt="">`;
+  $("#myName").textContent=ME.name;
+  $("#myRole").textContent=ME.role;
+  if(ME.owner){ $("#navOwner").classList.remove("hide"); $("#navStaff").classList.remove("hide"); }
+  MONTH = nextMonth();
   bindMonth();
 };
-$("#logout").onclick = ()=>location.reload();
+$("#logout").onclick=()=>location.reload();
 function nextMonth(){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+1); return ymKey(d); }
-function shiftMonth(k,n){ const [y,m]=k.split("-").map(Number); const d=new Date(y,m-1+n,1); return ymKey(d); }
+function shiftMonth(k,n){ const [y,m]=k.split("-").map(Number); return ymKey(new Date(y,m-1+n,1)); }
 
-/* ============ MONTH BINDING ============ */
+/* ============ MONTH ============ */
 function bindMonth(){
   if(unsub) unsub();
-  unsub = onValue(ref(db, `${ROOT}/months/${MONTH}`), snap=>{
+  unsub = onValue(ref(db,`${ROOT}/months/${MONTH}`), snap=>{
     const v = snap.val() || {};
-    MDATA = {status:v.status||"open", quota:v.quota??null, closures:v.closures||{}, requests:v.requests||{}};
+    MDATA = {
+      status:   v.status   || "open",
+      quota:    (v.quota===undefined||v.quota===null) ? null : v.quota,
+      closures: v.closures || {},
+      requests: v.requests || {}
+    };
     render();
-  });
+  }, err=>{ console.error(err); toast("讀取失敗,請檢查 Firebase 規則"); });
 }
-$("#ePrev").onclick=()=>{MONTH=shiftMonth(MONTH,-1);bindMonth();};
-$("#eNext").onclick=()=>{MONTH=shiftMonth(MONTH,1);bindMonth();};
-$("#oPrev").onclick=()=>{MONTH=shiftMonth(MONTH,-1);bindMonth();};
-$("#oNext").onclick=()=>{MONTH=shiftMonth(MONTH,1);bindMonth();};
-$("#viewToggle").onclick=()=>{
-  VIEW = VIEW==="emp" ? "owner" : "emp";
-  $("#viewToggle").textContent = VIEW==="emp" ? "老闆檢視" : "我的排休";
-  $("#viewToggle").classList.toggle("on", VIEW==="owner");
-  render();
+["#ePrev","#oPrev"].forEach(s=>$(s).onclick=()=>{MONTH=shiftMonth(MONTH,-1);bindMonth();});
+["#eNext","#oNext"].forEach(s=>$(s).onclick=()=>{MONTH=shiftMonth(MONTH,1);bindMonth();});
+
+$("#navOwner").onclick=()=>{
+  VIEW = VIEW==="owner" ? "emp" : "owner";
+  syncNav(); render();
 };
+$("#navStaff").onclick=()=>{
+  VIEW = VIEW==="staff" ? "emp" : "staff";
+  syncNav(); render();
+};
+function syncNav(){
+  $("#navOwner").classList.toggle("on", VIEW==="owner");
+  $("#navStaff").classList.toggle("on", VIEW==="staff");
+  $("#navOwner").textContent = VIEW==="owner" ? "我的排休" : "老闆檢視";
+  $("#navStaff").textContent = VIEW==="staff" ? "我的排休" : "員工設定";
+}
 
 /* ============ HELPERS ============ */
 const monthDays = k=>{const [y,m]=k.split("-").map(Number); return new Date(y,m,0).getDate();};
 const firstDow  = k=>{const [y,m]=k.split("-").map(Number); return new Date(y,m-1,1).getDay();};
-const myReq     = ()=> (MDATA.requests[ME.uid]) || {};
-const reqOf     = uid=> (MDATA.requests[uid]) || {};
+const reqOf = uid => (MDATA.requests && MDATA.requests[uid]) || {};
+const myReq = () => reqOf(ME.uid);
+const annualLeft = uid=>{ const a=ANNUAL[uid]||{}; return (Number(a.total)||0)-(Number(a.used)||0); };
 
-// 必休依 ts 排序,取前 MAX_MUST_PER_DAY 為確定,其餘候補
-function mustRank(dateStr){
+function mustRank(ds){
   const rows=[];
-  Object.entries(MDATA.requests).forEach(([uid,days])=>{
-    const r=days?.[dateStr];
-    if(r && r.state==="must") rows.push({uid, ts:r.ts||0});
+  Object.entries(MDATA.requests||{}).forEach(([uid,days])=>{
+    const r=days && days[ds];
+    if(r && r.state==="must" && STAFF[uid] && STAFF[uid].active!==false) rows.push({uid, ts:r.ts||0});
   });
   rows.sort((a,b)=>(a.ts||0)-(b.ts||0));
   return rows;
 }
-const isWaitlist = (uid,dateStr)=>{
-  const rank=mustRank(dateStr);
-  const i=rank.findIndex(r=>r.uid===uid);
+const isWaitlist = (uid,ds)=>{
+  const i=mustRank(ds).findIndex(r=>r.uid===uid);
   return i>=MAX_MUST_PER_DAY;
 };
-const holidayMustCount = uid=>{
+function holidayMustCount(uid){
   const [y,m]=MONTH.split("-").map(Number);
-  return Object.entries(reqOf(uid)).filter(([d,r])=>r.state==="must" && isHol(y,m,Number(d))).length;
-};
-const annualLeft = uid=>{ const a=ANNUAL[uid]||{total:0,used:0}; return (a.total||0)-(a.used||0); };
-// 這人這天能不能上(基本設定)
+  return Object.entries(reqOf(uid))
+    .filter(([d,r])=>r && r.state==="must" && isHol(y,m,Number(d))).length;
+}
 function baseAllows(uid,day){
-  const s=SETTINGS[uid]||{}; const [y,m]=MONTH.split("-").map(Number);
-  const hol=isHol(y,m,day);
-  return hol ? s.weekend!==false : s.weekday!==false;
+  const s=SETTINGS[uid]||{};
+  const [y,m]=MONTH.split("-").map(Number);
+  return isHol(y,m,day) ? s.weekend!==false : s.weekday!==false;
+}
+// 每週固定希望排休(基本設定自動帶入,僅顯示用)
+function autoPrefer(uid,day){
+  const s=SETTINGS[uid]||{};
+  const [y,m]=MONTH.split("-").map(Number);
+  return Array.isArray(s.weeklyAvoid) && s.weeklyAvoid.includes(dowOf(y,m,day));
 }
 
 /* ============ RENDER ============ */
 function render(){
-  const [y,m]=MONTH.split("-").map(Number);
-  const label=`${y} 年 ${m} 月`;
-  $("#eMonth").textContent=label; $("#oMonth").textContent=label;
-  const owner = ME.owner && VIEW==="owner";
-  $("#empView").classList.toggle("hide", owner);
-  $("#ownerView").classList.toggle("hide", !owner);
-  owner ? renderOwner() : renderEmp();
+  try{
+    const [y,m]=MONTH.split("-").map(Number);
+    const label=`${y} 年 ${m} 月`;
+    $("#eMonth").textContent=label;
+    $("#oMonth").textContent=label;
+    const owner = !!ME.owner;
+    const v = owner ? VIEW : "emp";
+    $("#empView").classList.toggle("hide",   v!=="emp");
+    $("#ownerView").classList.toggle("hide", v!=="owner");
+    $("#staffView").classList.toggle("hide", v!=="staff");
+    if(v==="emp")        renderEmp();
+    else if(v==="owner") renderOwner();
+    else                 renderStaff();
+  }catch(e){ console.error("render error",e); toast("畫面錯誤,請重新整理"); }
 }
 
 /* ---------- employee ---------- */
 function renderEmp(){
   const [y,m]=MONTH.split("-").map(Number);
-  const days=monthDays(MONTH), start=firstDow(MONTH), mine=myReq();
-  const locked = MDATA.status==="locked";
+  const days=monthDays(MONTH), start=firstDow(MONTH);
+  const mine=myReq(), locked=MDATA.status==="locked";
 
-  // due chip
-  const today=new Date(), dueMonth=shiftMonth(MONTH,-1);
-  const [dy,dm]=dueMonth.split("-").map(Number);
-  const due=new Date(dy,dm-1,DUE_DAY);
-  const left=Math.ceil((due-today)/86400000);
+  const dueM=shiftMonth(MONTH,-1);
+  const [dy,dm]=dueM.split("-").map(Number);
+  const left=Math.ceil((new Date(dy,dm-1,DUE_DAY)-new Date())/86400000);
   const chip=$("#eDue");
-  if(locked){ chip.innerHTML=`<span class="chip d">已截止</span>`; }
-  else if(left>=0&&left<=7){ chip.innerHTML=`<span class="chip w">距截止 <span class="num">${left}</span> 天</span>`; }
-  else { chip.innerHTML=`<span class="chip l">${dm}/${DUE_DAY} 截止</span>`; }
+  if(locked)                 chip.innerHTML=`<span class="chip d">已截止</span>`;
+  else if(left>=0&&left<=7)  chip.innerHTML=`<span class="chip w">距截止 <span class="num">${left}</span> 天</span>`;
+  else                       chip.innerHTML=`<span class="chip l">${dm}/${DUE_DAY} 截止</span>`;
+
   $("#eLocked").classList.toggle("hide", !locked);
-  if(locked) $("#eLocked").textContent="本月排休已截止並鎖定。要修改請找老闆娘。";
+  if(locked) $("#eLocked").textContent="本月排休已截止並鎖定,要修改請找老闆娘。";
 
   const hc=holidayMustCount(ME.uid);
   $("#eHolCnt").textContent=`${hc} / ${MAX_HOLIDAY_MUST}`;
@@ -554,17 +684,25 @@ function renderEmp(){
   $("#eCnt").textContent = Object.keys(mine).length;
 
   const cal=$("#eCal"); cal.innerHTML="";
-  for(let i=0;i<start;i++){ const v=document.createElement("div"); v.className="cell void"; cal.appendChild(v); }
-  for(let d=1; d<=days; d++){
+  for(let i=0;i<start;i++){
+    const v=document.createElement("div"); v.className="cell void"; cal.appendChild(v);
+  }
+  for(let d=1;d<=days;d++){
     const ds=pad(d), r=mine[ds], hol=isHol(y,m,d), closed=!!MDATA.closures[ds];
     const c=document.createElement("div");
-    c.className="cell"+(hol?" hol":"")+(closed?" closed":"")+(r?` ${r.state}`:"");
-    if(r && r.state==="must" && isWaitlist(ME.uid,ds)) c.classList.add("wait");
+    c.className="cell"+(hol?" hol":"");
     let tag="";
-    if(closed) tag="店休";
-    else if(r?.state==="must")    tag = r.pool==="annual" ? "特休" : "排休";
-    else if(r?.state==="limited") tag = `${r.window?.start||""}–${r.window?.end||""}`.replace(/:00/g,":00");
-    else if(r?.state==="prefer")  tag = "希望";
+    if(closed){
+      c.classList.add("closed"); tag="店休";
+    } else if(r){
+      c.classList.add(r.state);
+      if(r.state==="must")         tag = r.pool==="annual" ? "特休" : "排休";
+      else if(r.state==="limited") tag = `${(r.window&&r.window.start)||""}–${(r.window&&r.window.end)||""}`;
+      else if(r.state==="prefer")  tag = "希望";
+      if(r.state==="must" && isWaitlist(ME.uid,ds)) c.classList.add("wait");
+    } else if(autoPrefer(ME.uid,d)){
+      c.classList.add("prefer"); tag="希望";
+    }
     c.innerHTML=`<span class="d">${d}</span>${tag?`<span class="t">${tag}</span>`:""}`;
     if(!locked && !closed) c.onclick=()=>openDay(d);
     cal.appendChild(c);
@@ -577,26 +715,25 @@ function renderOwner(){
   const [y,m]=MONTH.split("-").map(Number);
   const days=monthDays(MONTH);
   const uids=Object.keys(STAFF).filter(u=>STAFF[u].active!==false)
-    .sort((a,b)=>(STAFF[a].order||9)-(STAFF[b].order||9));
+    .sort((a,b)=>(STAFF[a].order||99)-(STAFF[b].order||99));
 
   $("#oStatus").innerHTML = MDATA.status==="locked"
     ? `<span class="chip d">已鎖定</span>` : `<span class="chip o">收件中</span>`;
   $("#oLock").textContent = MDATA.status==="locked" ? "解鎖" : "鎖定";
-  $("#oQuota").value = MDATA.quota ?? "";
+  $("#oQuota").value = MDATA.quota==null ? "" : MDATA.quota;
 
-  const done = uids.filter(u=>Object.keys(reqOf(u)).length>0);
-  const miss = uids.filter(u=>Object.keys(reqOf(u)).length===0);
+  const done=uids.filter(u=>Object.keys(reqOf(u)).length>0);
+  const miss=uids.filter(u=>Object.keys(reqOf(u)).length===0);
   $("#oReport").innerHTML = `已回報 <span class="num">${done.length}/${uids.length}</span>`
-    + (miss.length? ` · 待回報 ${miss.map(u=>STAFF[u].name).join("、")}` : "");
+    + (miss.length ? ` · 待回報 ${miss.map(u=>STAFF[u].name).join("、")}` : "");
 
-  // quota cards (正職)
   const q=$("#oQuotaList"); q.innerHTML="";
-  uids.filter(u=>FULLTIME.includes(u)).forEach(u=>{
+  uids.filter(u=>STAFF[u].role==="正職").forEach(u=>{
     const req=reqOf(u);
     const off=Object.values(req).filter(r=>r.state==="must").length;
     const quota=MDATA.quota||0;
-    const pct = quota? Math.min(100, Math.round(off/quota*100)) : 0;
-    const waiting = Object.keys(req).length===0;
+    const pct=quota?Math.min(100,Math.round(off/quota*100)):0;
+    const waiting=Object.keys(req).length===0;
     const el=document.createElement("div");
     el.className="qr"+(waiting?" wait":"");
     el.innerHTML = waiting
@@ -608,13 +745,13 @@ function renderOwner(){
     q.appendChild(el);
   });
 
-  // grid
   const t=$("#oGrid"); t.innerHTML="";
-  const thead=document.createElement("thead"); const hr=document.createElement("tr");
+  const thead=document.createElement("thead"), hr=document.createElement("tr");
   hr.appendChild(document.createElement("th"));
   for(let d=1;d<=days;d++){
-    const th=document.createElement("th");
-    if(isHol(y,m,d)) th.className="hol";
+    const th=document.createElement("th"), ds=pad(d);
+    if(MDATA.closures[ds]) th.className="closed";
+    else if(isHol(y,m,d))  th.className="hol";
     th.innerHTML=`<span class="num">${d}</span>`;
     hr.appendChild(th);
   }
@@ -623,13 +760,14 @@ function renderOwner(){
   const tb=document.createElement("tbody");
   uids.forEach(u=>{
     const tr=document.createElement("tr");
-    const nd=document.createElement("td"); nd.className="nm"; nd.textContent=STAFF[u].name; tr.appendChild(nd);
+    const nd=document.createElement("td"); nd.className="nm"; nd.textContent=STAFF[u].name;
+    tr.appendChild(nd);
     const req=reqOf(u), never=Object.keys(req).length===0;
     for(let d=1;d<=days;d++){
       const ds=pad(d), r=req[ds], closed=!!MDATA.closures[ds];
       const td=document.createElement("td"); td.className="c";
-      if(closed){ td.classList.add("closed"); }
-      else if(never){ td.classList.add("wait"); }
+      if(closed){ td.classList.add("closed"); td.textContent="休"; }
+      else if(never){ td.classList.add("waitrow"); }
       else if(r){
         if(r.state==="must"){
           td.classList.add(r.pool==="annual"?"annual":"must");
@@ -637,7 +775,7 @@ function renderOwner(){
           if(isWaitlist(u,ds)) td.classList.add("over");
         } else if(r.state==="limited"){ td.classList.add("limited"); td.textContent="限"; }
         else if(r.state==="prefer"){ td.classList.add("prefer"); td.textContent="希"; }
-      }
+      } else if(autoPrefer(u,d)){ td.classList.add("prefer"); td.textContent="希"; }
       td.onclick=()=>openClosure(d);
       tr.appendChild(td);
     }
@@ -645,9 +783,13 @@ function renderOwner(){
   });
   t.appendChild(tb);
 
-  // notes
   const notes=$("#oNotes"); notes.innerHTML="";
-  const push=(cls,html)=>{const n=document.createElement("div");n.className="note "+cls;n.innerHTML=`<span class="dt"></span><span>${html}</span>`;notes.appendChild(n);};
+  const push=(cls,html)=>{
+    const n=document.createElement("div");
+    n.className="note "+cls;
+    n.innerHTML=`<span class="dt"></span><span>${html}</span>`;
+    notes.appendChild(n);
+  };
   let any=false;
   for(let d=1;d<=days;d++){
     const ds=pad(d);
@@ -659,47 +801,156 @@ function renderOwner(){
       const wl=rank.slice(MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、");
       push("d", `<b>${m}/${d} 必休已滿</b>——${ok}(依告知順序);${wl} 候補。`);
     }
-    // 缺人提示:當天可上的人(扣掉必休)
-    const avail = Object.keys(STAFF).filter(u=>STAFF[u].active!==false).filter(u=>{
+    const avail=uids.filter(u=>{
       const r=reqOf(u)[ds];
-      if(r?.state==="must") return false;
+      if(r && r.state==="must") return false;
       return baseAllows(u,d);
     });
-    const min = isHol(y,m,d) ? 4 : 3;
-    if(avail.length < min){
+    const min = isHol(y,m,d) ? MIN_STAFF.holiday : MIN_STAFF.weekday;
+    if(avail.length<min){
       any=true;
-      const sup = Object.keys(STAFF).filter(u=>reqOf(u)[ds]?.state==="prefer").map(u=>STAFF[u].name);
+      const sup=uids.filter(u=>{
+        const r=reqOf(u)[ds];
+        return (r && r.state==="prefer") || autoPrefer(u,d);
+      }).map(u=>STAFF[u].name);
       push("w", `<b>${m}/${d} 可上僅 ${avail.length} 人</b>(門檻 ${min})`
-        + (sup.length? `——可支援:${sup.join("、")}(希望排休)。` : `——需調整排休。`));
+        + (sup.length ? `——可支援:${sup.join("、")}(希望排休)。` : `——需調整排休。`));
     }
   }
   if(!any) push("o", `<b>目前沒有衝突</b>——必休未超額,每日可上人力都達門檻。`);
 }
+
+/* ---------- staff admin ---------- */
+function renderStaff(){
+  const list=$("#sList"); list.innerHTML="";
+  Object.entries(STAFF).sort((a,b)=>(a[1].order||99)-(b[1].order||99)).forEach(([uid,s])=>{
+    const st=SETTINGS[uid]||{}, an=ANNUAL[uid]||{};
+    const win = st.window ? `${st.window.start}–${st.window.end}` : "整天可上";
+    const dt  = [st.weekday!==false?"平日":null, st.weekend!==false?"假日":null].filter(Boolean).join("、")||"—";
+    const wa  = (st.weeklyAvoid||[]).map(d=>"日一二三四五六"[d]).join("、");
+    const row=document.createElement("div");
+    row.className="srow"+(s.active===false?" off":"");
+    row.innerHTML=`<img src="${avatarOf(s.animal)}" alt="">
+      <div class="info"><div class="n">${s.name}${s.active===false?"(停用)":""}</div>
+      <div class="d">${s.role} · ${dt} · ${win}${wa?` · 每週${wa}希望排休`:""} · 特休 ${(an.total||0)-(an.used||0)}/${an.total||0}</div></div>
+      <span style="color:var(--ink3);font-size:11px">編輯</span>`;
+    row.onclick=()=>openStaff(uid);
+    list.appendChild(row);
+  });
+}
+function openStaff(uid){
+  EDIT_UID=uid;
+  const s = uid ? (STAFF[uid]||{}) : {name:"",role:"工讀",animal:"rabbit",active:true};
+  const st= uid ? (SETTINGS[uid]||{}) : {weekday:true,weekend:true,window:null,weeklyAvoid:[]};
+  const an= uid ? (ANNUAL[uid]||{}) : {total:0,used:0};
+  EDIT_DRAFT={
+    animal:s.animal||"rabbit",
+    weeklyAvoid:[...(st.weeklyAvoid||[])]
+  };
+  $("#stTitle").textContent = uid ? "編輯員工" : "新增員工";
+  $("#stDel").classList.toggle("hide", !uid);
+  $("#stDel").textContent = (uid && STAFF[uid] && STAFF[uid].active===false) ? "啟用" : "停用";
+  $("#stName").value=s.name||"";
+  $("#stRole").value=s.role||"工讀";
+  $("#stWeekday").checked = st.weekday!==false;
+  $("#stWeekend").checked = st.weekend!==false;
+  $("#stWinS").value = st.window?st.window.start:"";
+  $("#stWinE").value = st.window?st.window.end:"";
+  $("#stAnnTotal").value = an.total||0;
+  $("#stAnnUsed").value  = an.used||0;
+  $("#stPin").value = (uid && AUTH[uid] && AUTH[uid].pin) || DEFAULT_PIN;
+
+  const ap=$("#stAnimals"); ap.innerHTML="";
+  Object.keys(ANIMALS).forEach(k=>{
+    const b=document.createElement("button");
+    b.innerHTML=`<img src="${ANIMALS[k]}" alt=""><span>${ANIMAL_ZH[k]}</span>`;
+    b.classList.toggle("on", k===EDIT_DRAFT.animal);
+    b.onclick=()=>{ EDIT_DRAFT.animal=k; $$("#stAnimals button").forEach(x=>x.classList.remove("on")); b.classList.add("on"); };
+    ap.appendChild(b);
+  });
+  const wd=$("#stWeekly"); wd.innerHTML="";
+  ["日","一","二","三","四","五","六"].forEach((lbl,i)=>{
+    const b=document.createElement("button");
+    b.textContent=lbl;
+    b.classList.toggle("on", EDIT_DRAFT.weeklyAvoid.includes(i));
+    b.onclick=()=>{
+      const k=EDIT_DRAFT.weeklyAvoid.indexOf(i);
+      if(k>=0) EDIT_DRAFT.weeklyAvoid.splice(k,1); else EDIT_DRAFT.weeklyAvoid.push(i);
+      b.classList.toggle("on");
+    };
+    wd.appendChild(b);
+  });
+  $("#staffMask").classList.remove("hide");
+}
+$("#sAdd").onclick=()=>openStaff(null);
+$("#stCancel").onclick=()=>$("#staffMask").classList.add("hide");
+$("#stDel").onclick=async()=>{
+  if(!EDIT_UID) return;
+  const now = STAFF[EDIT_UID].active===false;
+  await update(ref(db,`${ROOT}/staff/${EDIT_UID}`), {active: now});
+  await reloadRefs();
+  $("#staffMask").classList.add("hide");
+  toast(now?"已啟用":"已停用");
+  render();
+};
+$("#stSave").onclick=async()=>{
+  const name=$("#stName").value.trim();
+  if(!name){ toast("請填名字"); return; }
+  const pin=$("#stPin").value.trim();
+  if(!/^\d{4}$/.test(pin)){ toast("PIN 需為 4 位數"); return; }
+  const s=$("#stWinS").value, e=$("#stWinE").value;
+  if((s&&!e)||(!s&&e)){ toast("時間窗要填兩個或都留空"); return; }
+  if(s&&e&&s>=e){ toast("時間窗不正確"); return; }
+
+  const uid = EDIT_UID || (name.toLowerCase().replace(/[^a-z0-9]/g,"") || "u") + Date.now().toString(36).slice(-4);
+  const order = EDIT_UID ? (STAFF[EDIT_UID].order||99) : (Object.keys(STAFF).length+1);
+  const owner = EDIT_UID ? !!STAFF[EDIT_UID].owner : false;
+
+  await update(ref(db,`${ROOT}/staff/${uid}`), {
+    name, role:$("#stRole").value, animal:EDIT_DRAFT.animal,
+    order, active:true, owner
+  });
+  await set(ref(db,`${ROOT}/settings/${uid}`), {
+    weekday:$("#stWeekday").checked,
+    weekend:$("#stWeekend").checked,
+    window: s&&e ? {start:s,end:e} : null,
+    weeklyAvoid: EDIT_DRAFT.weeklyAvoid.sort()
+  });
+  await set(ref(db,`${ROOT}/annual/${YEAR}/${uid}`), {
+    total:parseInt($("#stAnnTotal").value,10)||0,
+    used: parseInt($("#stAnnUsed").value,10)||0
+  });
+  await set(ref(db,`${ROOT}/auth/${uid}`), {pin});
+  await reloadRefs();
+  $("#staffMask").classList.add("hide");
+  toast("已儲存");
+  render();
+};
 
 /* ============ DAY MODAL ============ */
 function openDay(d){
   const [y,m]=MONTH.split("-").map(Number);
   DAY=pad(d);
   const cur=myReq()[DAY];
-  DRAFT = cur ? JSON.parse(JSON.stringify(cur)) : {state:null, pool:"normal", window:{start:"06:00",end:"10:00"}};
+  DRAFT = cur ? JSON.parse(JSON.stringify(cur))
+              : {state:null, pool:"normal", window:{start:"06:00",end:"10:00"}};
   const hol=isHol(y,m,d);
   $("#dTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
-  $("#dSub").textContent=`星期${"日一二三四五六"[new Date(y,m-1,d).getDay()]} · ${hol?"假日":"平日"}`;
+  $("#dSub").textContent=`星期${"日一二三四五六"[dowOf(y,m,d)]} · ${hol?"假日":"平日"}`;
   $("#dAnnLeft").textContent=`剩 ${annualLeft(ME.uid)} 天`;
   $("#dClear").classList.toggle("hide", !cur);
 
-  // 假日必休上限提示
   const hc=holidayMustCount(ME.uid);
-  const blocked = hol && hc>=MAX_HOLIDAY_MUST && cur?.state!=="must";
-  $("#dWarn").innerHTML = blocked
-    ? `<div class="warnbox">你這個月的假日必休已達 ${MAX_HOLIDAY_MUST} 天上限,這天無法再指定必休。可改選「限時可上」或「希望排休」。</div>` : "";
-  $("#dSeg").querySelector('[data-s="must"]').disabled = blocked;
-
-  // 必休人數提示
-  const rank=mustRank(DAY).filter(r=>r.uid!==ME.uid);
-  if(!blocked && rank.length>=MAX_MUST_PER_DAY){
-    $("#dWarn").innerHTML = `<div class="warnbox">這天必休已有 ${rank.map(r=>STAFF[r.uid].name).join("、")},你送出會列為候補(依告知順序)。</div>`;
+  const blocked = hol && hc>=MAX_HOLIDAY_MUST && (!cur || cur.state!=="must");
+  const others = mustRank(DAY).filter(r=>r.uid!==ME.uid);
+  if(blocked){
+    $("#dWarn").innerHTML=`<div class="warnbox">你這個月的假日必休已達 ${MAX_HOLIDAY_MUST} 天上限,這天無法再指定必休。可改選「限時可上」或「希望排休」。</div>`;
+  } else if(others.length>=MAX_MUST_PER_DAY){
+    $("#dWarn").innerHTML=`<div class="warnbox">這天必休已有 ${others.slice(0,MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、")},你送出會列為候補(依告知順序)。</div>`;
+  } else {
+    $("#dWarn").innerHTML="";
   }
+  $("#dSeg").querySelector('[data-s="must"]').disabled = blocked;
   syncModal();
   $("#dayMask").classList.remove("hide");
 }
@@ -712,36 +963,35 @@ function syncModal(){
   $("#dPoolWrap").classList.toggle("hide", DRAFT.state!=="must");
   $("#dTimeWrap").classList.toggle("hide", DRAFT.state!=="limited");
   if(DRAFT.state==="limited"){
-    $("#dStart").value=DRAFT.window?.start||"06:00";
-    $("#dEnd").value  =DRAFT.window?.end||"10:00";
+    $("#dStart").value=(DRAFT.window&&DRAFT.window.start)||"06:00";
+    $("#dEnd").value  =(DRAFT.window&&DRAFT.window.end)||"10:00";
   }
-  $("#dSave").disabled = !DRAFT.state;
+  $("#dSave").disabled=!DRAFT.state;
   $("#dSave").textContent = DRAFT.state==="must" ? "確定必休"
-    : DRAFT.state==="limited" ? "確定時間" : DRAFT.state==="prefer" ? "確定" : "確定";
+    : DRAFT.state==="limited" ? "確定時間" : "確定";
 }
-$$("#dSeg button").forEach(b=> b.onclick=()=>{ DRAFT.state=b.dataset.s; syncModal(); });
-$$("#dPool button").forEach(b=> b.onclick=()=>{ DRAFT.pool=b.dataset.p; syncModal(); });
+$$("#dSeg button").forEach(b=> b.onclick=()=>{ if(b.disabled) return; DRAFT.state=b.dataset.s; syncModal(); });
+$$("#dPool button").forEach(b=> b.onclick=()=>{ if(b.disabled) return; DRAFT.pool=b.dataset.p; syncModal(); });
 $("#dCancel").onclick=()=>$("#dayMask").classList.add("hide");
 $("#dClear").onclick=async()=>{
-  await remove(ref(db, `${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`));
+  await remove(ref(db,`${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`));
   $("#dayMask").classList.add("hide"); toast("已清除");
 };
 $("#dSave").onclick=async()=>{
   if(!DRAFT.state) return;
-  const payload={ state:DRAFT.state, ts:serverTimestamp() };
-  if(DRAFT.state==="must"){ payload.pool=DRAFT.pool; }
+  const payload={state:DRAFT.state, ts:serverTimestamp()};
+  if(DRAFT.state==="must") payload.pool=DRAFT.pool;
   if(DRAFT.state==="limited"){
     const s=$("#dStart").value, e=$("#dEnd").value;
     if(!s||!e||s>=e){ toast("時間不正確"); return; }
     payload.window={start:s,end:e};
   }
-  await set(ref(db, `${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`), payload);
-  $("#dayMask").classList.add("hide");
-  toast("已儲存");
+  await set(ref(db,`${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`), payload);
+  $("#dayMask").classList.add("hide"); toast("已儲存");
 };
 $("#eSubmit").onclick=()=>{
   const n=Object.keys(myReq()).length;
-  toast(n? `已送出 ${n} 天` : "尚未設定任何一天");
+  toast(n ? `已送出 ${n} 天` : "尚未設定任何一天");
 };
 
 /* ============ OWNER ACTIONS ============ */
@@ -750,32 +1000,34 @@ function openClosure(d){
   if(!ME.owner) return;
   CDAY=pad(d);
   const [y,m]=MONTH.split("-").map(Number);
-  const on=!!MDATA.closures[CDAY];
   $("#cTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
-  $("#cToggle").textContent = on ? "取消店休" : "設為店休";
+  $("#cToggle").textContent = MDATA.closures[CDAY] ? "取消店休" : "設為店休";
   $("#closeMask").classList.remove("hide");
 }
 $("#cCancel").onclick=()=>$("#closeMask").classList.add("hide");
 $("#cToggle").onclick=async()=>{
   const on=!!MDATA.closures[CDAY];
-  if(on) await remove(ref(db, `${ROOT}/months/${MONTH}/closures/${CDAY}`));
-  else   await set(ref(db, `${ROOT}/months/${MONTH}/closures/${CDAY}`), {reason:"店休"});
+  if(on) await remove(ref(db,`${ROOT}/months/${MONTH}/closures/${CDAY}`));
+  else   await set(ref(db,`${ROOT}/months/${MONTH}/closures/${CDAY}`), {reason:"店休"});
   $("#closeMask").classList.add("hide");
   toast(on?"已取消店休":"已設為店休");
 };
 $("#oLock").onclick=async()=>{
   const next = MDATA.status==="locked" ? "open" : "locked";
-  await update(ref(db, `${ROOT}/months/${MONTH}`), {status:next});
+  await update(ref(db,`${ROOT}/months/${MONTH}`), {status:next});
   toast(next==="locked"?"已鎖定":"已解鎖");
 };
 $("#oQuotaSave").onclick=async()=>{
   const v=parseInt($("#oQuota").value,10);
   if(isNaN(v)||v<0||v>31){ toast("請填 0–31"); return; }
-  await update(ref(db, `${ROOT}/months/${MONTH}`), {quota:v});
+  await update(ref(db,`${ROOT}/months/${MONTH}`), {quota:v});
   toast("已儲存應休天數");
 };
 
-boot().catch(e=>{ $("#loginErr").textContent="連線失敗,請檢查 Firebase 設定"; console.error(e); });
+boot().catch(e=>{
+  console.error(e);
+  $("#loginErr").textContent="連線失敗,請檢查 Firebase 設定與規則";
+});
 </script>
 </body>
 </html>

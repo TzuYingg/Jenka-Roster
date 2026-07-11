@@ -354,15 +354,14 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/fireba
 import { getDatabase, ref, get, set, update, remove, onValue, serverTimestamp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
-/* ============ CONFIG — 換成 jenka-inventory 專案的設定 ============ */
-const firebaseConfig = {
-  apiKey: "REPLACE_ME",
-  authDomain: "jenka-inventory.firebaseapp.com",
-  databaseURL: "https://jenka-inventory-default-rtdb.firebaseio.com",
-  projectId: "jenka-inventory",
-  storageBucket: "jenka-inventory.appspot.com",
-  messagingSenderId: "REPLACE_ME",
-  appId: "REPLACE_ME"
+const firebaseConfig={
+  apiKey:"AIzaSyDoSPSDr6DfQNa7DHV9Z4xl0Dkc36kd69o",
+  authDomain:"jenka-inventory.firebaseapp.com",
+  databaseURL:"https://jenka-inventory-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"jenka-inventory",
+  storageBucket:"jenka-inventory.firebasestorage.app",
+  messagingSenderId:"1051643046922",
+  appId:"1:1051643046922:web:f0c0a053aabe88581643f3"
 };
 const app = initializeApp(firebaseConfig);
 const db  = getDatabase(app);

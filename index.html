@@ -289,11 +289,12 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .notice svg{width:14px;height:14px;flex:none;margin-top:3px}
 .notice b{font-weight:600}
 .cllist{display:flex;flex-direction:column;gap:7px}
-.clrow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+.clrow{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;
   padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
 .clrow .cdate{font-size:12px;font-weight:500;white-space:nowrap}
 .clrow .crs{font-size:12px;color:var(--ink2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .clrow .cst{font-size:11px;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.clrow .cdel{font-size:11px;color:var(--danger);white-space:nowrap}
 .clrow.pending  .cst{background:var(--warn-bg);color:#7a5a20}
 .clrow.approved .cst{background:var(--ok-bg);color:#3f5e47}
 .clrow.rejected .cst{background:var(--danger-bg);color:#7a3b2c}
@@ -1290,11 +1291,21 @@ function renderClMine(){
   if(!mine.length){ box.innerHTML=`<div class="boempty">本月沒有連續休假申請。</div>`; return; }
   box.innerHTML="";
   mine.forEach(c=>{
+    const st=c.status||"pending";
     const el=document.createElement("div");
-    el.className="clrow "+(c.status||"pending");
+    el.className="clrow "+st;
     el.innerHTML=`<span class="cdate num">${m}/${Number(c.start)} – ${m}/${Number(c.end)}</span>
       <span class="crs">${c.reason||"連續休假"}</span>
-      <span class="cst">${CL_STATUS[c.status||"pending"]}</span>`;
+      <span class="cst">${CL_STATUS[st]}</span>
+      ${st==="pending" ? `<button class="cdel" data-id="${c.id}">刪除</button>` : `<span></span>`}`;
+    if(st==="pending"){
+      el.querySelector(".cdel").onclick=async(ev)=>{
+        ev.stopPropagation();
+        if(!confirm("確定要刪除這筆連續休假申請嗎?")) return;
+        await remove(ref(db,`${ROOT}/months/${MONTH}/continuous/${c.id}`));
+        toast("已刪除");
+      };
+    }
     box.appendChild(el);
   });
 }

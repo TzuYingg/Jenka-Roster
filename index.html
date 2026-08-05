@@ -492,6 +492,10 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <button class="mbtn on" id="sAdd">新增員工</button>
       </div>
       <div class="slist" id="sList"></div>
+      <button class="mbtn hide" id="sOffToggle" style="width:100%;margin-top:10px;text-align:left">
+        已停用員工(<span class="cnt">0</span>) <span id="sOffArrow">▾</span>
+      </button>
+      <div class="slist hide" id="sOffList" style="margin-top:8px"></div>
       <div class="cap">點任一位可編輯:名字、身分、動物、可上日型、固定時間窗、每週固定許願休假、特休天數、PIN。</div>
     </div>
   </div>
@@ -590,7 +594,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
     <div class="mh"><div class="dd" id="crWho"></div><div class="wd" id="crRange"></div></div>
     <div class="mhint" id="crMeta"></div>
     <div id="crLead"></div>
-    <div class="fld" style="margin-bottom:12px">
+    <div class="fld" style="margin-bottom:12px" id="crBlackoutWrap">
       <label><input type="checkbox" id="crBlackout" style="width:auto;margin-right:6px">同時設為人力吃緊期(提醒其他人避免排休)</label>
     </div>
     <div class="mfoot">
@@ -625,7 +629,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 <div class="mask c hide" id="staffMask">
   <div class="modal">
     <div class="mh"><div class="dd" id="stTitle">編輯員工</div>
-      <button class="mbtn" id="stDel" style="color:var(--danger)">停用</button></div>
+      <div style="display:flex;gap:8px">
+        <button class="mbtn" id="stDel" style="color:var(--danger)">停用</button>
+        <button class="mbtn hide" id="stHardDel" style="color:var(--danger)">刪除</button>
+      </div>
+    </div>
     <div class="mhint">動物頭像會顯示在登入頁與班表。</div>
     <div class="fgrid">
       <div class="fld"><label>名字</label><input id="stName" placeholder="例:小明"></div>
@@ -633,6 +641,14 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <select id="stRole"><option>正職</option><option>工讀</option><option>老闆</option><option>老闆娘</option></select>
       </div>
     </div>
+    <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink2);margin:-2px 0 14px">
+      權限
+      <select id="stPerm" style="flex:1;padding:8px;border:1px solid var(--line);border-radius:9px">
+        <option value="self">僅看自己</option>
+        <option value="view">檢視全體</option>
+        <option value="full">完整管理</option>
+      </select>
+    </label>
     <div class="lab">動物頭像</div>
     <div class="apick" id="stAnimals"></div>
     <div class="lab">可上的日型</div>
@@ -774,6 +790,15 @@ const isHol = (y,m,d)=>{const w=new Date(y,m-1,d).getDay(); return w===0||w===6;
 const dowOf = (y,m,d)=> new Date(y,m-1,d).getDay();
 const toast = t=>{const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1900);};
 const avatarOf = key => ANIMALS[key] || ANIMALS.rabbit;
+// 權限:full=完整管理 / view=檢視全體(唯讀) / self=僅看自己(預設)
+function permOf(uid){
+  const s=STAFF[uid]; if(!s) return "self";
+  if(s.perm) return s.perm;
+  if(s.owner) return "full";
+  if(s.canManage) return "view";
+  return "self";
+}
+const PERM_LABEL={full:"完整管理", view:"檢視全體", self:"僅看自己"};
 
 /* ============ BOOT ============ */
 async function boot(){
@@ -871,13 +896,16 @@ function tryLogin(){
 }
 function loginAs(uid){
   ME={uid, ...STAFF[uid]};
+  ME.perm = permOf(uid);
   $("#loginErr").textContent="";
   $("#login").classList.add("hide");
   $("#app").classList.remove("hide");
   $("#avatar").innerHTML=`<img src="${avatarOf(ME.animal)}" alt="">`;
   $("#myName").textContent=ME.name;
   $("#myRole").textContent=ME.role;
-  if(ME.owner){ $("#navOwner").classList.remove("hide"); $("#navStaff").classList.remove("hide"); }
+  if(ME.perm==="full" || ME.perm==="view"){ $("#navOwner").classList.remove("hide"); }
+  if(ME.perm==="full"){ $("#navStaff").classList.remove("hide"); }
+  syncNav();
   MONTH = nextMonth();
   bindMonth();
   bindContinuous();
@@ -931,7 +959,8 @@ $("#navStaff").onclick=()=>{
 function syncNav(){
   $("#navOwner").classList.toggle("on", VIEW==="owner");
   $("#navStaff").classList.toggle("on", VIEW==="staff");
-  $("#navOwner").textContent = VIEW==="owner" ? "我的排休" : "老闆檢視";
+  const ownerLabel = (ME && ME.perm==="view") ? "排休總覽" : "老闆檢視";
+  $("#navOwner").textContent = VIEW==="owner" ? "我的排休" : ownerLabel;
   $("#navStaff").textContent = VIEW==="staff" ? "我的排休" : "員工設定";
 }
 
@@ -996,8 +1025,10 @@ function render(){
     const label=`${y} 年 ${m} 月`;
     $("#eMonth").textContent=label;
     $("#oMonth").textContent=label;
-    const owner = !!ME.owner;
-    const v = owner ? VIEW : "emp";
+    const perm = (ME && ME.perm) || "self";
+    const v = VIEW==="owner" ? ((perm==="full"||perm==="view")?"owner":"emp")
+            : VIEW==="staff" ? (perm==="full"?"staff":"emp")
+            : "emp";
     $("#empView").classList.toggle("hide",   v!=="emp");
     $("#ownerView").classList.toggle("hide", v!=="owner");
     $("#staffView").classList.toggle("hide", v!=="staff");
@@ -1097,11 +1128,16 @@ function renderOwner(){
   const days=monthDays(MONTH);
   const uids=Object.keys(STAFF).filter(u=>STAFF[u].active!==false)
     .sort((a,b)=>(STAFF[a].order||99)-(STAFF[b].order||99));
+  const canAct = ME.perm==="full";
 
-  $("#oStatus").innerHTML = MDATA.status==="locked"
-    ? `<span class="chip d">已鎖定</span>` : `<span class="chip o">收件中</span>`;
+  $("#oStatus").innerHTML = (MDATA.status==="locked"
+    ? `<span class="chip d">已鎖定</span>` : `<span class="chip o">收件中</span>`)
+    + (canAct ? "" : ` <span class="chip l">唯讀</span>`);
+  $("#oLock").classList.toggle("hide", !canAct);
   $("#oLock").textContent = MDATA.status==="locked" ? "解鎖" : "鎖定";
   $("#oQuota").value = MDATA.quota==null ? "" : MDATA.quota;
+  $("#oQuota").disabled = !canAct;
+  $("#oQuotaSave").classList.toggle("hide", !canAct);
 
   const done=uids.filter(u=>Object.keys(reqOf(u)).length>0);
   const miss=uids.filter(u=>Object.keys(reqOf(u)).length===0);
@@ -1118,6 +1154,7 @@ function renderOwner(){
   renderClInbox();
 
   // 人力吃緊期清單
+  $("#boAdd").classList.toggle("hide", !canAct);
   const bl=$("#boList"); bl.innerHTML="";
   const bans=blackoutRanges();
   if(!bans.length){
@@ -1128,12 +1165,14 @@ function renderOwner(){
       el.className="borow";
       el.innerHTML=`<span class="bdate num">${m}/${Number(b.start)} – ${m}/${Number(b.end)}</span>
         <span class="brs">${b.reason||"人力吃緊"}</span>
-        <button class="bdel" data-id="${b.id}">刪除</button>`;
-      el.querySelector(".bdel").onclick=async(ev)=>{
-        ev.stopPropagation();
-        await remove(ref(db,`${ROOT}/months/${MONTH}/blackouts/${b.id}`));
-        toast("已刪除");
-      };
+        ${canAct ? `<button class="bdel" data-id="${b.id}">刪除</button>` : `<span></span>`}`;
+      if(canAct){
+        el.querySelector(".bdel").onclick=async(ev)=>{
+          ev.stopPropagation();
+          await remove(ref(db,`${ROOT}/months/${MONTH}/blackouts/${b.id}`));
+          toast("已刪除");
+        };
+      }
       bl.appendChild(el);
     });
   }
@@ -1278,8 +1317,10 @@ function renderOwner(){
 
 /* ---------- staff admin ---------- */
 function renderStaff(){
-  const list=$("#sList"); list.innerHTML="";
-  Object.entries(STAFF).sort((a,b)=>(a[1].order||99)-(b[1].order||99)).forEach(([uid,s])=>{
+  const entries=Object.entries(STAFF).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
+  const active=entries.filter(([,s])=>s.active!==false);
+  const off=entries.filter(([,s])=>s.active===false);
+  const buildRow=(uid,s)=>{
     const st=SETTINGS[uid]||{}, an=ANNUAL[uid]||{};
     const win = st.window ? `${st.window.start}–${st.window.end}` : "整天可上";
     const full = st.weekday!==false && st.weekend!==false;
@@ -1287,14 +1328,34 @@ function renderStaff(){
     const wa  = (st.weeklyAvoid||[]).map(d=>"日一二三四五六"[d]).join("、");
     const row=document.createElement("div");
     row.className="srow"+(s.active===false?" off":"");
+    const p = permOf(uid);
     row.innerHTML=`<img src="${avatarOf(s.animal)}" alt="">
-      <div class="info"><div class="n">${s.name}${s.active===false?"(停用)":""}</div>
+      <div class="info"><div class="n">${s.name}${s.active===false?"(停用)":""}${p!=="self"?` <span style="color:var(--ok);font-weight:400">· ${PERM_LABEL[p]}</span>`:""}</div>
       <div class="d">${s.role} · ${full?dt:`<span style="color:var(--warn)">只上${dt}</span>`} · ${win}${wa?` · 每週${wa}許願休假`:""} · 特休 ${(an.total||0)-(an.used||0)}/${an.total||0}</div></div>
       <span style="color:var(--ink3);font-size:11px">編輯</span>`;
     row.onclick=()=>openStaff(uid);
-    list.appendChild(row);
-  });
+    return row;
+  };
+
+  const list=$("#sList"); list.innerHTML="";
+  active.forEach(([uid,s])=>list.appendChild(buildRow(uid,s)));
+
+  const offToggle=$("#sOffToggle"), offBox=$("#sOffList");
+  if(!off.length){
+    offToggle.classList.add("hide");
+    offBox.classList.add("hide");
+  } else {
+    offToggle.classList.remove("hide");
+    offToggle.querySelector(".cnt").textContent = off.length;
+    offBox.innerHTML="";
+    off.forEach(([uid,s])=>offBox.appendChild(buildRow(uid,s)));
+  }
 }
+$("#sOffToggle").onclick=()=>{
+  const open = !$("#sOffList").classList.contains("hide");
+  $("#sOffList").classList.toggle("hide", open);
+  $("#sOffArrow").textContent = open ? "▾" : "▴";
+};
 function openStaff(uid){
   EDIT_UID=uid;
   const s = uid ? (STAFF[uid]||{}) : {name:"",role:"工讀",animal:"rabbit",active:true};
@@ -1307,6 +1368,8 @@ function openStaff(uid){
   $("#stTitle").textContent = uid ? "編輯員工" : "新增員工";
   $("#stDel").classList.toggle("hide", !uid);
   $("#stDel").textContent = (uid && STAFF[uid] && STAFF[uid].active===false) ? "啟用" : "停用";
+  $("#stHardDel").classList.toggle("hide", !uid || uid===ME.uid);
+  $("#stPerm").value = uid ? permOf(uid) : "self";
   $("#stName").value=s.name||"";
   $("#stRole").value=s.role||"工讀";
   $("#stWeekday").checked = st.weekday!==false;
@@ -1350,6 +1413,21 @@ $("#stDel").onclick=async()=>{
   toast(now?"已啟用":"已停用");
   render();
 };
+$("#stHardDel").onclick=async()=>{
+  if(!EDIT_UID) return;
+  if(EDIT_UID===ME.uid){ toast("不能刪除自己"); return; }
+  const nm=(STAFF[EDIT_UID]&&STAFF[EDIT_UID].name)||"";
+  if(!confirm(`確定要永久刪除${nm}的員工資料嗎?\n會清掉他的個人資料、PIN、特休設定,但過去月份已經送出的排休紀錄不會被動到。\n這個動作無法復原。`)) return;
+  if(!confirm(`再次確認:真的要刪除${nm}嗎?`)) return;
+  await remove(ref(db,`${ROOT}/staff/${EDIT_UID}`));
+  await remove(ref(db,`${ROOT}/settings/${EDIT_UID}`));
+  await remove(ref(db,`${ROOT}/annual/${YEAR}/${EDIT_UID}`));
+  await remove(ref(db,`${ROOT}/auth/${EDIT_UID}`));
+  await reloadRefs();
+  $("#staffMask").classList.add("hide");
+  toast("已刪除");
+  render();
+};
 $("#stSave").onclick=async()=>{
   const name=$("#stName").value.trim();
   if(!name){ toast("請填名字"); return; }
@@ -1361,11 +1439,14 @@ $("#stSave").onclick=async()=>{
 
   const uid = EDIT_UID || (name.toLowerCase().replace(/[^a-z0-9]/g,"") || "u") + Date.now().toString(36).slice(-4);
   const order = EDIT_UID ? (STAFF[EDIT_UID].order||99) : (Object.keys(STAFF).length+1);
-  const owner = EDIT_UID ? !!STAFF[EDIT_UID].owner : false;
+  const perm = $("#stPerm").value;
+  if(EDIT_UID===ME.uid && ME.perm==="full" && perm!=="full"){
+    if(!confirm("這是你自己的帳號,把權限改成非「完整管理」之後可能會立刻失去管理權限。確定要這樣改嗎?")) return;
+  }
 
   await update(ref(db,`${ROOT}/staff/${uid}`), {
     name, role:$("#stRole").value, animal:EDIT_DRAFT.animal,
-    order, active:true, owner
+    order, active:true, perm, owner: perm==="full", canManage: perm==="view"
   });
   await set(ref(db,`${ROOT}/settings/${uid}`), {
     weekday:$("#stWeekday").checked,
@@ -1541,7 +1622,7 @@ $("#clSave").onclick=async()=>{
 /* --- owner review --- */
 let CR=null;
 function openReview(c){
-  if(!ME.owner) return;
+  if(ME.perm!=="full" && ME.perm!=="view") return;
   CR=c;
   const nm=(STAFF[c.uid]&&STAFF[c.uid].name)||c.uid;
   const n=dRange(c.start,c.end).length;
@@ -1553,14 +1634,17 @@ function openReview(c){
     ? `<div class="warnbox ok">提出時距離 ${lead} 天,符合提前一個月。</div>`
     : `<div class="warnbox">提出時距離只有 ${lead} 天,<b>未達提前一個月</b>。</div>`;
   $("#crBlackout").checked=false;
+  const canAct = ME.perm==="full";
   const done=(c.status||"pending")!=="pending";
-  $("#crApprove").classList.toggle("hide", done);
-  $("#crReject").classList.toggle("hide", done);
-  $("#crDelete").classList.remove("hide");
+  $("#crApprove").classList.toggle("hide", !canAct || done);
+  $("#crReject").classList.toggle("hide", !canAct || done);
+  $("#crDelete").classList.toggle("hide", !canAct);
+  $("#crBlackoutWrap").classList.toggle("hide", !canAct);
   $("#crMask").classList.remove("hide");
 }
 $("#crClose").onclick=()=>$("#crMask").classList.add("hide");
 $("#crReject").onclick=async()=>{
+  if(ME.perm!=="full") return;
   await update(ref(db,`${ROOT}/continuous/${CR.id}`), {status:"rejected"});
   $("#crMask").classList.add("hide"); toast("已婉拒");
 };
@@ -1574,6 +1658,7 @@ function splitByMonth(startISO,endISO){
   return byMonth;
 }
 $("#crApprove").onclick=async()=>{
+  if(ME.perm!=="full") return;
   const c=CR;
   await update(ref(db,`${ROOT}/continuous/${c.id}`), {status:"approved"});
   // 核准後鎖成必休(依日期落在哪個月分別寫入)
@@ -1594,6 +1679,7 @@ $("#crApprove").onclick=async()=>{
   toast("已核准,並排入必休");
 };
 $("#crDelete").onclick=async()=>{
+  if(ME.perm!=="full") return;
   const c=CR;
   const nm=(STAFF[c.uid]&&STAFF[c.uid].name)||"";
   if(!confirm(`確定要刪除${nm}這筆連續休假申請嗎?${(c.status||"pending")==="approved"?"\n(已核准的必休天數也會一併清除)":""}`)) return;
@@ -1743,7 +1829,7 @@ $("#eSubmit").onclick=()=>{
 /* ============ OWNER ACTIONS ============ */
 let CDAY=null;
 function openClosure(d){
-  if(!ME.owner) return;
+  if(ME.perm!=="full"){ toast("僅能檢視,無法編輯"); return; }
   CDAY=pad(d);
   const [y,m]=MONTH.split("-").map(Number);
   $("#cTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
@@ -1759,6 +1845,7 @@ $("#cToggle").onclick=async()=>{
   toast(on?"已取消店休":"已設為店休");
 };
 function openBlackout(){
+  if(ME.perm!=="full") return;
   const [y,m]=MONTH.split("-").map(Number);
   $("#boMonthLbl").textContent=`${y} 年 ${m} 月`;
   $("#boStart").value=""; $("#boEnd").value=""; $("#boReason").value="";
@@ -1767,6 +1854,7 @@ function openBlackout(){
 $("#boAdd").onclick=openBlackout;
 $("#boCancel").onclick=()=>$("#boMask").classList.add("hide");
 $("#boSave").onclick=async()=>{
+  if(ME.perm!=="full") return;
   const days=monthDays(MONTH);
   const a=parseInt($("#boStart").value,10), b=parseInt($("#boEnd").value,10);
   if(isNaN(a)||isNaN(b)||a<1||b<1||a>days||b>days){ toast(`請填 1–${days}`); return; }
@@ -1779,11 +1867,13 @@ $("#boSave").onclick=async()=>{
   toast("已新增");
 };
 $("#oLock").onclick=async()=>{
+  if(ME.perm!=="full") return;
   const next = MDATA.status==="locked" ? "open" : "locked";
   await update(ref(db,`${ROOT}/months/${MONTH}`), {status:next});
   toast(next==="locked"?"已鎖定":"已解鎖");
 };
 $("#oQuotaSave").onclick=async()=>{
+  if(ME.perm!=="full") return;
   const v=parseInt($("#oQuota").value,10);
   if(isNaN(v)||v<0||v>31){ toast("請填 0–31"); return; }
   await update(ref(db,`${ROOT}/months/${MONTH}`), {quota:v});

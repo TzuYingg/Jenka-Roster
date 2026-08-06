@@ -31,6 +31,50 @@
   }
 })();
 </script>
+<script>
+/* 自動偵測新版本:比對伺服器上目前的檔案內容跟上次記錄的是否不同,不同就自動重新整理 */
+(function(){
+  var KEY = "jenka_content_hash";
+  function hashStr(str){
+    var h = 0;
+    for (var i = 0; i < str.length; i++) {
+      h = (Math.imul(31, h) + str.charCodeAt(i)) | 0;
+    }
+    return String(h);
+  }
+  function hasOpenModal(){
+    var masks = document.querySelectorAll(".mask");
+    for (var i = 0; i < masks.length; i++) {
+      if (!masks[i].classList.contains("hide")) return true;
+    }
+    return false;
+  }
+  function checkForUpdate(){
+    var url = location.pathname + "?_cachebust=" + Date.now();
+    fetch(url, {cache: "no-store"}).then(function(res){
+      if (!res.ok) return;
+      return res.text();
+    }).then(function(text){
+      if (!text) return;
+      var newHash = hashStr(text);
+      var oldHash = localStorage.getItem(KEY);
+      if (!oldHash) {
+        localStorage.setItem(KEY, newHash);
+        return;
+      }
+      if (oldHash !== newHash && !hasOpenModal()) {
+        localStorage.setItem(KEY, newHash);
+        location.href = location.pathname + "?_v=" + newHash;
+      }
+    }).catch(function(){ /* 離線或抓取失敗時不處理,不影響原本使用 */ });
+  }
+  checkForUpdate();
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "visible") checkForUpdate();
+  });
+  window.addEventListener("focus", checkForUpdate);
+})();
+</script>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&display=swap');
 :root{
@@ -377,6 +421,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div><div class="nm" id="myName"></div><div class="rl" id="myRole"></div></div>
     </div>
     <div class="rt">
+      <button class="mbtn on" id="navEmp">我的排休</button>
       <button class="mbtn hide" id="navStaff">員工設定</button>
       <button class="mbtn hide" id="navOwner">老闆檢視</button>
       <button class="mbtn" id="logout">登出</button>
@@ -433,7 +478,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 
     <div class="card" style="margin-top:12px">
       <div class="sechd"><h2>本月備註</h2></div>
-      <div class="mhint">有什麼想跟老闆娘特別說明的都可以寫在這裡,例如身體狀況、排休原因、臨時狀況等。</div>
+      <div class="mhint">本月排休有什麼想跟老闆娘特別說明的請寫在這裡哦～</div>
       <textarea id="eNote" rows="3" placeholder="例:這個月剛好有..." style="width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;margin-top:8px"></textarea>
       <div style="display:flex;justify-content:flex-end;margin-top:8px">
         <button class="mbtn on" id="eNoteSave">儲存備註</button>
@@ -474,6 +519,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div class="hr"></div>
 
       <div class="sechd"><h2>回報狀況</h2><span class="sub" id="oReport"></span></div>
+      <div id="oRoster" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
       <div class="quota" id="oQuotaList"></div>
       <div class="hr"></div>
       <div class="sechd"><h2>排休彙整</h2><span class="sub">點格子可設店休 · 必休已鎖定</span></div>
@@ -800,6 +846,7 @@ const $  = s=>document.querySelector(s);
 const $$ = s=>[...document.querySelectorAll(s)];
 const pad = n=>String(n).padStart(2,"0");
 const escapeHtml = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const truncate = (s,n) => s.length>n ? s.slice(0,n)+"…" : s;
 const ymKey = d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const isHol = (y,m,d)=>{const w=new Date(y,m-1,d).getDay(); return w===0||w===6;};
 const dowOf = (y,m,d)=> new Date(y,m-1,d).getDay();
@@ -964,20 +1011,24 @@ function bindMonth(){
 ["#ePrev","#oPrev"].forEach(s=>$(s).onclick=()=>{MONTH=shiftMonth(MONTH,-1);bindMonth();});
 ["#eNext","#oNext"].forEach(s=>$(s).onclick=()=>{MONTH=shiftMonth(MONTH,1);bindMonth();});
 
+$("#navEmp").onclick=()=>{
+  VIEW = "emp";
+  syncNav(); render();
+};
 $("#navOwner").onclick=()=>{
-  VIEW = VIEW==="owner" ? "emp" : "owner";
+  VIEW = "owner";
   syncNav(); render();
 };
 $("#navStaff").onclick=()=>{
-  VIEW = VIEW==="staff" ? "emp" : "staff";
+  VIEW = "staff";
   syncNav(); render();
 };
 function syncNav(){
+  $("#navEmp").classList.toggle("on", VIEW==="emp");
   $("#navOwner").classList.toggle("on", VIEW==="owner");
   $("#navStaff").classList.toggle("on", VIEW==="staff");
-  const ownerLabel = (ME && ME.perm==="view") ? "排休總覽" : "老闆檢視";
-  $("#navOwner").textContent = VIEW==="owner" ? "我的排休" : ownerLabel;
-  $("#navStaff").textContent = VIEW==="staff" ? "我的排休" : "員工設定";
+  $("#navOwner").textContent = (ME && ME.perm==="view") ? "排休總覽" : "老闆檢視";
+  $("#navStaff").textContent = "員工設定";
 }
 
 /* ============ HELPERS ============ */
@@ -1166,8 +1217,23 @@ function renderOwner(){
   $("#oReport").innerHTML = (urgent
       ? `<span style="color:var(--warn)">距截止${dueLeft<=0?"已過期":`還有 ${dueLeft} 天`}</span> · `
       : "")
-    + `已回報 <span class="num">${done.length}/${uids.length}</span>`
-    + (miss.length ? ` · 待回報 ${miss.map(u=>STAFF[u].name).join("、")}` : "");
+    + `已回報 <span class="num">${done.length}/${uids.length}</span>`;
+
+  const rosterBox=$("#oRoster"); rosterBox.innerHTML="";
+  uids.forEach(u=>{
+    const s=STAFF[u];
+    const reported = Object.keys(reqOf(u)).length>0;
+    const note=(MDATA.notes && MDATA.notes[u] && MDATA.notes[u].trim()) || "";
+    const el=document.createElement("div");
+    el.style.cssText=`display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid ${reported?"var(--line)":"var(--warn)"};border-radius:10px;background:${reported?"var(--surface)":"var(--warn-bg)"}`;
+    el.innerHTML=`<img src="${avatarOf(s.animal)}" alt="" style="width:30px;height:30px;border-radius:50%;flex:none;object-fit:cover">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:13px;${reported?"":"color:#7a5a20"}">${escapeHtml(s.name)}</div>
+        ${note?`<div style="font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(truncate(note,16))}</div>`:""}
+      </div>
+      <span style="font-size:11px;padding:3px 9px;border-radius:999px;flex:none;background:${reported?"var(--ok-bg)":"var(--surface)"};color:${reported?"#3f5e47":"#7a5a20"}">${reported?"已回報":"待回報"}</span>`;
+    rosterBox.appendChild(el);
+  });
 
   renderClInbox();
 

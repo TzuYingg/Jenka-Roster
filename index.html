@@ -213,7 +213,7 @@ input,select{font-family:inherit;font-size:15px}
 .cell.closed .d{color:#fff;opacity:.75;text-decoration:line-through}
 .cell.closed .t{color:#fff;font-weight:500;letter-spacing:.04em}
 .cell.wait::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:999px;background:var(--warn)}
-.cell .peers{position:absolute;top:5px;left:5px;display:flex;gap:2px}
+.cell .peers{display:flex;gap:2px;justify-content:center;margin-top:2px}
 .cell .peers span{width:4px;height:4px;border-radius:999px;background:rgba(43,40,36,.5)}
 .cell.must .peers span,.cell.closed .peers span{background:rgba(255,255,255,.85)}
 .foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
@@ -460,7 +460,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <span class="c">已設定 <b class="num" id="eCnt">0</b> 天</span>
       </div>
     </div>
-    <div class="cap">點任一天即可設定，確定就會直接送出。必休每天最多 2 人，依確定時間先後；額滿會排候補（格子右上小點）。格子左上角的小圓點代表同事已排必休的人數（最多疊 3 顆），方便彼此避開撞期，詳細名字點進當天就能看到。</div>
+    <div class="cap">點任一天即可設定，確定就會直接送出。必休每天最多 2 人，依確定時間先後；額滿會排候補（格子右上小點）。日期數字下方的小圓點代表同事已排必休的人數（最多疊 3 顆），方便彼此避開撞期，詳細名字點進當天就能看到。</div>
 
     <div class="card" style="margin-top:12px">
       <div class="sechd">
@@ -636,7 +636,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
     <div class="fgrid one">
       <div class="fld"><label>原因</label><input id="clReason" placeholder="例：出國"></div>
     </div>
-    <div class="fgrid one">
+    <div class="fgrid one" id="clPoolWrap">
       <div class="fld"><label>用哪一種假</label>
         <select id="clPool"><option value="normal">排休</option><option value="annual">特休</option></select>
       </div>
@@ -1184,7 +1184,7 @@ function renderEmp(){
     }
     if(!closed && blackoutOn(d)) c.classList.add("bo");
     const peerDots = peerN ? `<span class="peers">${"<span></span>".repeat(Math.min(peerN,3))}</span>` : "";
-    c.innerHTML=`<span class="d">${d}</span>${tag?`<span class="t">${tag}</span>`:""}${peerDots}`;
+    c.innerHTML=`<span class="d">${d}</span>${peerDots}${tag?`<span class="t">${tag}</span>`:""}`;
     if(!locked && !closed) c.onclick=()=>openDay(d);
     cal.appendChild(c);
   }
@@ -1686,6 +1686,7 @@ function renderClInbox(){
 /* --- employee apply --- */
 $("#clAdd").onclick=()=>{
   $("#clStart").value=""; $("#clEnd").value=""; $("#clReason").value=""; $("#clPool").value="normal";
+  $("#clPoolWrap").classList.toggle("hide", ME.role==="工讀");
   $("#clLead").innerHTML="";
   $("#clMask").classList.remove("hide");
 };
@@ -1831,7 +1832,7 @@ function openDay(d){
   } else if(blocked){
     $("#dWarn").innerHTML=`<div class="warnbox">你這個月的假日必休已達 ${MAX_HOLIDAY_MUST} 天上限，這天無法再指定必休。可改選「提早閃人」或「許願休假」。</div>`;
   } else if(others.length>=MAX_MUST_PER_DAY){
-    $("#dWarn").innerHTML=`<div class="warnbox">這天必休已有 ${others.slice(0,MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、")}，你送出會列為候補（依告知順序）。</div>`;
+    $("#dWarn").innerHTML=`<div class="warnbox">這天必休已有 ${others.slice(0,MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、")}，你送出會列為候補（依回報順序）。</div>`;
   } else {
     $("#dWarn").innerHTML="";
   }
@@ -1873,11 +1874,12 @@ function syncModal(){
       <b>核准前這裡無法直接送出必休。</b>
     </div>`;
   } else box.innerHTML="";
+  if(ME.role==="工讀" && DRAFT.pool==="annual") DRAFT.pool="normal";
   $$("#dPool button").forEach(b=>{
     b.classList.toggle("on", b.dataset.p===DRAFT.pool);
     if(b.dataset.p==="annual") b.disabled = annualLeft(ME.uid)<=0;
   });
-  $("#dPoolWrap").classList.toggle("hide", DRAFT.state!=="must");
+  $("#dPoolWrap").classList.toggle("hide", DRAFT.state!=="must" || ME.role==="工讀");
   $("#dTimeWrap").classList.toggle("hide", DRAFT.state!=="limited");
   $("#dExtraWrap").classList.toggle("hide", DRAFT.state!=="extra");
   if(DRAFT.state==="limited"){

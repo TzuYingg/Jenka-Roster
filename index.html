@@ -251,6 +251,12 @@ input,select{font-family:inherit;font-size:15px}
 .times input{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;
   background:var(--surface);color:var(--ink);font-family:"DM Sans"}
 .mnote{font-size:11px;color:var(--ink3);margin:-6px 0 12px;line-height:1.5}
+.peerq{background:var(--surface);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.peerq .row{display:flex;align-items:center;flex-wrap:wrap;gap:14px;font-size:13px}
+.peerq .row span{display:flex;align-items:center;gap:5px}
+.peerq .row b{font-size:11px;font-weight:400;color:var(--ink3)}
+.peerq .row .wait{opacity:.55;font-style:italic}
+.peerq .cap{font-size:11px;color:var(--ink3);margin-top:8px}
 .mfoot{display:flex;gap:8px}
 .mfoot .btn{flex:1}
 .mfoot .btn.rm{color:var(--danger);border:1px solid var(--danger-bg);background:var(--danger-bg)}
@@ -460,7 +466,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <span class="c">已設定 <b class="num" id="eCnt">0</b> 天</span>
       </div>
     </div>
-    <div class="cap">點任一天即可設定，確定就會直接送出。必休每天最多 2 人，依確定時間先後；額滿會排候補（格子右上小點）。日期數字下方的小圓點代表同事已排必休的人數（最多疊 3 顆），方便彼此避開撞期，詳細名字點進當天就能看到。</div>
+    <div class="cap">點任一天即可設定，確定就會直接送出。必休每天最多 2 人，依回報時間先後排序，額滿會排候補（格子右上小點）。日期數字下方的小圓點代表同事已排必休的人數（最多疊 3 顆），點進當天可以看到完整排隊順序。</div>
 
     <div class="card" style="margin-top:12px">
       <div class="sechd">
@@ -521,6 +527,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 
       <div class="sechd"><h2>回報狀況</h2><span class="sub" id="oReport"></span></div>
       <div id="oRoster" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
+      <div class="sechd" style="margin-bottom:8px"><h2 style="font-size:13px">本月應休天數</h2><span class="sub">僅列正職</span></div>
       <div class="quota" id="oQuotaList"></div>
       <div class="hr"></div>
       <div class="sechd"><h2>排休彙整</h2><span class="sub">點格子可設店休 · 必休已鎖定</span></div>
@@ -1264,7 +1271,10 @@ function renderOwner(){
   }
 
   const q=$("#oQuotaList"); q.innerHTML="";
-  uids.filter(u=>STAFF[u].role==="正職").forEach(u=>{
+  const fullTimers = uids.filter(u=>STAFF[u].role==="正職");
+  q.previousElementSibling.classList.toggle("hide", fullTimers.length===0);
+  q.classList.toggle("hide", fullTimers.length===0);
+  fullTimers.forEach(u=>{
     const req=reqOf(u);
     const off=Object.values(req).filter(r=>r.state==="must").length;
     const quota=MDATA.quota||0;
@@ -1823,16 +1833,24 @@ function openDay(d){
   const hc=holidayMustCount(ME.uid);
   const blocked = hol && hc>=MAX_HOLIDAY_MUST && (!cur || cur.state!=="must");
   const others = mustRank(DAY).filter(r=>r.uid!==ME.uid);
-  $("#dPeers").innerHTML = others.length
-    ? `<div class="mnote">同事已排：${others.map(r=>`${STAFF[r.uid].name}${isWaitlist(r.uid,DAY)?"（候補）":""}`).join("、")}</div>`
-    : "";
+  const alreadyMust = cur && cur.state==="must";
+  if(others.length){
+    const rows = others.map((r,i)=>{
+      const wl = isWaitlist(r.uid,DAY);
+      return `<span class="${wl?"wait":""}"><b>${i+1}</b>${escapeHtml(STAFF[r.uid].name)}${wl?"（候補）":""}</span>`;
+    });
+    if(!alreadyMust && others.length>=MAX_MUST_PER_DAY){
+      rows.push(`<span class="wait"><b>${others.length+1}</b>你（候補）</span>`);
+    }
+    $("#dPeers").innerHTML = `<div class="peerq"><div class="row">${rows.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
+  } else {
+    $("#dPeers").innerHTML = "";
+  }
   const bo = blackoutOn(d);
   if(bo){
-    $("#dWarn").innerHTML=`<div class="warnbox bo">這段期間人力吃緊${bo.reason?`(${bo.reason})`:""}，可以的話請盡量避免排休。若真的有事仍可指定必休。</div>`;
+    $("#dWarn").innerHTML=`<div class="warnbox bo">這段期間人力吃緊${bo.reason?`（${bo.reason}）`:""}，可以的話請盡量避免排休。若真的有事仍可指定必休。</div>`;
   } else if(blocked){
     $("#dWarn").innerHTML=`<div class="warnbox">你這個月的假日必休已達 ${MAX_HOLIDAY_MUST} 天上限，這天無法再指定必休。可改選「提早閃人」或「許願休假」。</div>`;
-  } else if(others.length>=MAX_MUST_PER_DAY){
-    $("#dWarn").innerHTML=`<div class="warnbox">這天必休已有 ${others.slice(0,MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、")}，你送出會列為候補（依回報順序）。</div>`;
   } else {
     $("#dWarn").innerHTML="";
   }

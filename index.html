@@ -563,7 +563,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         已停用員工（<span class="cnt">0</span>） <span id="sOffArrow">▾</span>
       </button>
       <div class="slist hide" id="sOffList" style="margin-top:8px"></div>
-      <div class="cap">點任一位可編輯：名字、身分、動物、可上日型、固定時間窗、每週固定許願休假、特休天數、PIN。</div>
+      <div class="cap">點任一位可編輯：名字、身分、動物、可上日型、固定時間窗、每週固定許願休假／必休、特休天數、PIN。</div>
     </div>
   </div>
 </div>
@@ -725,14 +725,22 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <label><input type="checkbox" id="stWeekend"> 假日</label>
     </div>
     <div class="mnote" style="margin:0 0 12px">若只勾一種，他日曆上另一種日子會變灰、只能回報「可增班」，不會出現必休等選項。</div>
-    <div class="lab">固定時間窗（長期，留空＝整天可上）</div>
+    <div class="lab">平日時段（長期，留空＝整天可上）</div>
     <div class="fgrid">
-      <div class="fld"><label>最早到</label><input type="time" id="stWinS"></div>
-      <div class="fld"><label>最晚走</label><input type="time" id="stWinE"></div>
+      <div class="fld"><label>最早到</label><input type="time" id="stWinWdS"></div>
+      <div class="fld"><label>最晚走</label><input type="time" id="stWinWdE"></div>
+    </div>
+    <div class="lab">假日時段（長期，留空＝整天可上）</div>
+    <div class="fgrid">
+      <div class="fld"><label>最早到</label><input type="time" id="stWinWeS"></div>
+      <div class="fld"><label>最晚走</label><input type="time" id="stWinWeE"></div>
     </div>
     <div class="lab">每週固定許願休假</div>
     <div class="wdays" id="stWeekly"></div>
     <div class="cap" style="margin:0 0 12px">點選星期，系統每月自動帶入「許願休假」。</div>
+    <div class="lab">每週固定必休</div>
+    <div class="wdays" id="stWeeklyMust"></div>
+    <div class="cap" style="margin:0 0 12px">點選星期，系統每月自動排入真正的必休（不占用每天 2 人上限，一定會保留給他）。</div>
     <div class="fgrid">
       <div class="fld"><label>本年特休（天）</label><input class="num" id="stAnnTotal" inputmode="numeric" placeholder="0"></div>
       <div class="fld"><label>已用特休（天）</label><input class="num" id="stAnnUsed" inputmode="numeric" placeholder="0"></div>
@@ -1001,6 +1009,30 @@ function nextMonth(){ const d=new Date(); d.setDate(1); d.setMonth(d.getMonth()+
 function shiftMonth(k,n){ const [y,m]=k.split("-").map(Number); return ymKey(new Date(y,m-1+n,1)); }
 
 /* ============ MONTH ============ */
+let weeklySyncedMonth=null;
+async function syncWeeklyMust(){
+  if(weeklySyncedMonth===MONTH) return;
+  weeklySyncedMonth=MONTH;
+  const [y,m]=MONTH.split("-").map(Number);
+  const days=monthDays(MONTH);
+  const activeStaff=Object.entries(STAFF).filter(([,s])=>s.active!==false);
+  for(const [uid] of activeStaff){
+    const wm=(SETTINGS[uid]&&SETTINGS[uid].weeklyMust)||[];
+    if(!wm.length) continue;
+    const req=(MDATA.requests&&MDATA.requests[uid])||{};
+    const upd={};
+    for(let d=1; d<=days; d++){
+      const ds=pad(d);
+      if(MDATA.closures[ds]) continue;
+      if(!wm.includes(dowOf(y,m,d))) continue;
+      if(!baseAllows(uid,d)) continue;
+      if(!req[ds]) upd[ds]={state:"must", pool:"normal", ts:Date.now(), fromWeekly:true};
+    }
+    if(Object.keys(upd).length){
+      await update(ref(db,`${ROOT}/months/${MONTH}/requests/${uid}`), upd);
+    }
+  }
+}
 function bindMonth(){
   if(unsub) unsub();
   unsub = onValue(ref(db,`${ROOT}/months/${MONTH}`), snap=>{
@@ -1013,6 +1045,7 @@ function bindMonth(){
       blackouts:v.blackouts|| {},
       notes:    v.notes    || {}
     };
+    syncWeeklyMust();
     render();
   }, err=>{ console.error(err); toast("讀取失敗：" + (err.code||"請檢查 Firebase 規則")); });
 }
@@ -1050,19 +1083,26 @@ function mustRank(ds){
   const rows=[];
   Object.entries(MDATA.requests||{}).forEach(([uid,days])=>{
     const r=days && days[ds];
-    if(r && r.state==="must" && STAFF[uid] && STAFF[uid].active!==false) rows.push({uid, ts:r.ts||0});
+    if(r && r.state==="must" && STAFF[uid] && STAFF[uid].active!==false) rows.push({uid, ts:r.ts||0, fixed:!!r.fromWeekly});
   });
-  rows.sort((a,b)=>(a.ts||0)-(b.ts||0));
+  // 固定必休（每週固定必休）永遠排最前面（排序 0），不跟一般必休搶名額
+  rows.sort((a,b)=>{
+    if(a.fixed!==b.fixed) return a.fixed ? -1 : 1;
+    return (a.ts||0)-(b.ts||0);
+  });
   return rows;
 }
 const isWaitlist = (uid,ds)=>{
-  const i=mustRank(ds).findIndex(r=>r.uid===uid);
-  return i>=MAX_MUST_PER_DAY;
+  const rank=mustRank(ds);
+  const i=rank.findIndex(r=>r.uid===uid);
+  if(i<0 || rank[i].fixed) return false;
+  const nonFixedIndex = rank.slice(0,i+1).filter(r=>!r.fixed).length - 1;
+  return nonFixedIndex>=MAX_MUST_PER_DAY;
 };
 function holidayMustCount(uid){
   const [y,m]=MONTH.split("-").map(Number);
   return Object.entries(reqOf(uid))
-    .filter(([d,r])=>r && r.state==="must" && isHol(y,m,Number(d))).length;
+    .filter(([d,r])=>r && r.state==="must" && !r.fromWeekly && isHol(y,m,Number(d))).length;
 }
 
 /* ===== 人力吃緊期（出國等） ===== */
@@ -1085,6 +1125,11 @@ function baseAllows(uid,day){
   const s=SETTINGS[uid]||{};
   const [y,m]=MONTH.split("-").map(Number);
   return isHol(y,m,day) ? s.weekend!==false : s.weekday!==false;
+}
+// 依平日/假日取得該員工的固定時間窗（相容舊版單一 window 欄位）
+function windowFor(uid, isHolDay){
+  const s=SETTINGS[uid]||{};
+  return (isHolDay ? s.windowWeekend : s.windowWeekday) || s.window || null;
 }
 // 每週固定許願休假（基本設定自動帶入，僅顯示用）
 function autoPrefer(uid,day){
@@ -1348,13 +1393,16 @@ function renderOwner(){
     const ds=pad(d);
     if(MDATA.closures[ds]) continue;
     const rank=mustRank(ds);
-    if(rank.length>MAX_MUST_PER_DAY){
+    const fixedRows=rank.filter(r=>r.fixed);
+    const nonFixedRows=rank.filter(r=>!r.fixed);
+    if(nonFixedRows.length>MAX_MUST_PER_DAY){
       any=true;
-      const ok=rank.slice(0,MAX_MUST_PER_DAY).map(r=>STAFF[r.uid].name).join("、");
-      const wlRows=rank.slice(MAX_MUST_PER_DAY);
+      const okRows=nonFixedRows.slice(0,MAX_MUST_PER_DAY);
+      const wlRows=nonFixedRows.slice(MAX_MUST_PER_DAY);
       wlRows.forEach(r=>{ waitTally[r.uid]=(waitTally[r.uid]||0)+1; });
+      const ok=[...fixedRows, ...okRows].map(r=>STAFF[r.uid].name).join("、");
       const wl=wlRows.map(r=>STAFF[r.uid].name).join("、");
-      push("d", `<b>${m}/${d} 必休已滿</b>——${ok}（依告知順序）;${wl} 候補。`);
+      push("d", `<b>${m}/${d} 必休已滿</b>——${ok}（依告知順序）；${wl} 候補。`);
     }
     const avail=uids.filter(u=>{
       const r=reqOf(u)[ds];
@@ -1434,7 +1482,12 @@ function renderStaff(){
   const off=entries.filter(([,s])=>s.active===false);
   const buildRow=(uid,s)=>{
     const st=SETTINGS[uid]||{}, an=ANNUAL[uid]||{};
-    const win = st.window ? `${st.window.start}–${st.window.end}` : "整天可上";
+    const winWd = st.windowWeekday || st.window;
+    const winWe = st.windowWeekend || st.window;
+    const bothDays = st.weekday!==false && st.weekend!==false;
+    const win = bothDays
+      ? `平日${winWd?`${winWd.start}–${winWd.end}`:"整天"}・假日${winWe?`${winWe.start}–${winWe.end}`:"整天"}`
+      : (st.weekend===false ? (winWd?`${winWd.start}–${winWd.end}`:"整天可上") : (winWe?`${winWe.start}–${winWe.end}`:"整天可上"));
     const full = st.weekday!==false && st.weekend!==false;
     const dt  = [st.weekday!==false?"平日":null, st.weekend!==false?"假日":null].filter(Boolean).join("、")||"—";
     const wa  = (st.weeklyAvoid||[]).map(d=>"日一二三四五六"[d]).join("、");
@@ -1471,11 +1524,12 @@ $("#sOffToggle").onclick=()=>{
 function openStaff(uid){
   EDIT_UID=uid;
   const s = uid ? (STAFF[uid]||{}) : {name:"",role:"工讀",animal:"rabbit",active:true};
-  const st= uid ? (SETTINGS[uid]||{}) : {weekday:true,weekend:true,window:null,weeklyAvoid:[]};
+  const st= uid ? (SETTINGS[uid]||{}) : {weekday:true,weekend:true,window:null,weeklyAvoid:[],weeklyMust:[]};
   const an= uid ? (ANNUAL[uid]||{}) : {total:0,used:0};
   EDIT_DRAFT={
     animal:s.animal||"rabbit",
-    weeklyAvoid:[...(st.weeklyAvoid||[])]
+    weeklyAvoid:[...(st.weeklyAvoid||[])],
+    weeklyMust:[...(st.weeklyMust||[])]
   };
   $("#stTitle").textContent = uid ? "編輯員工" : "新增員工";
   $("#stDel").classList.toggle("hide", !uid);
@@ -1486,8 +1540,12 @@ function openStaff(uid){
   $("#stRole").value=s.role||"工讀";
   $("#stWeekday").checked = st.weekday!==false;
   $("#stWeekend").checked = st.weekend!==false;
-  $("#stWinS").value = st.window?st.window.start:"";
-  $("#stWinE").value = st.window?st.window.end:"";
+  const winWd = st.windowWeekday || st.window;
+  const winWe = st.windowWeekend || st.window;
+  $("#stWinWdS").value = winWd?winWd.start:"";
+  $("#stWinWdE").value = winWd?winWd.end:"";
+  $("#stWinWeS").value = winWe?winWe.start:"";
+  $("#stWinWeE").value = winWe?winWe.end:"";
   $("#stAnnTotal").value = an.total||0;
   $("#stAnnUsed").value  = an.used||0;
   $("#stPin").value = (uid && AUTH[uid] && AUTH[uid].pin) || DEFAULT_PIN;
@@ -1511,6 +1569,18 @@ function openStaff(uid){
       b.classList.toggle("on");
     };
     wd.appendChild(b);
+  });
+  const wm=$("#stWeeklyMust"); wm.innerHTML="";
+  ["日","一","二","三","四","五","六"].forEach((lbl,i)=>{
+    const b=document.createElement("button");
+    b.textContent=lbl;
+    b.classList.toggle("on", EDIT_DRAFT.weeklyMust.includes(i));
+    b.onclick=()=>{
+      const k=EDIT_DRAFT.weeklyMust.indexOf(i);
+      if(k>=0) EDIT_DRAFT.weeklyMust.splice(k,1); else EDIT_DRAFT.weeklyMust.push(i);
+      b.classList.toggle("on");
+    };
+    wm.appendChild(b);
   });
   $("#staffMask").classList.remove("hide");
 }
@@ -1545,9 +1615,12 @@ $("#stSave").onclick=async()=>{
   if(!name){ toast("請填名字"); return; }
   const pin=$("#stPin").value.trim();
   if(!/^\d{4}$/.test(pin)){ toast("PIN 需為 4 位數"); return; }
-  const s=$("#stWinS").value, e=$("#stWinE").value;
-  if((s&&!e)||(!s&&e)){ toast("時間窗要填兩個或都留空"); return; }
-  if(s&&e&&s>=e){ toast("時間窗不正確"); return; }
+  const wds=$("#stWinWdS").value, wde=$("#stWinWdE").value;
+  const wes=$("#stWinWeS").value, wee=$("#stWinWeE").value;
+  if((wds&&!wde)||(!wds&&wde)){ toast("平日時段要填兩個或都留空"); return; }
+  if(wds&&wde&&wds>=wde){ toast("平日時段不正確"); return; }
+  if((wes&&!wee)||(!wes&&wee)){ toast("假日時段要填兩個或都留空"); return; }
+  if(wes&&wee&&wes>=wee){ toast("假日時段不正確"); return; }
 
   const uid = EDIT_UID || (name.toLowerCase().replace(/[^a-z0-9]/g,"") || "u") + Date.now().toString(36).slice(-4);
   const order = EDIT_UID ? (STAFF[EDIT_UID].order||99) : (Object.keys(STAFF).length+1);
@@ -1563,8 +1636,10 @@ $("#stSave").onclick=async()=>{
   await set(ref(db,`${ROOT}/settings/${uid}`), {
     weekday:$("#stWeekday").checked,
     weekend:$("#stWeekend").checked,
-    window: s&&e ? {start:s,end:e} : null,
-    weeklyAvoid: EDIT_DRAFT.weeklyAvoid.sort()
+    windowWeekday: wds&&wde ? {start:wds,end:wde} : null,
+    windowWeekend: wes&&wee ? {start:wes,end:wee} : null,
+    weeklyAvoid: EDIT_DRAFT.weeklyAvoid.sort(),
+    weeklyMust: EDIT_DRAFT.weeklyMust.sort()
   });
   await set(ref(db,`${ROOT}/annual/${YEAR}/${uid}`), {
     total:parseInt($("#stAnnTotal").value,10)||0,
@@ -1828,7 +1903,7 @@ function openDay(d){
   $("#dTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
   $("#dSub").textContent=`星期${"日一二三四五六"[dowOf(y,m,d)]} · ${hol?"假日":"平日"}`;
   $("#dAnnLeft").textContent=`剩 ${annualLeft(ME.uid)} 天`;
-  $("#dClear").classList.toggle("hide", !cur);
+  $("#dClear").classList.toggle("hide", !cur || !!(cur && cur.fromWeekly));
 
   const hc=holidayMustCount(ME.uid);
   const blocked = hol && hc>=MAX_HOLIDAY_MUST && (!cur || cur.state!=="must");
@@ -1868,7 +1943,7 @@ function openDay(d){
   $("#dOffNote").classList.toggle("hide", !off);
   if(off) $("#dOffNote").innerHTML=`<div class="warnbox">你這天本來不排班。如果剛好有空、可以來支援，請點下方「可增班」回報。</div>`;
 
-  const win=(SETTINGS[ME.uid]&&SETTINGS[ME.uid].window)||null;
+  const win=windowFor(ME.uid, hol);
   $("#dExtraNote").textContent = (!off && win && win.start && win.end)
     ? `平常固定 ${win.start}–${win.end}，這天可以多上到什麼時候？`
     : "這天比平常多出來的時段，讓老闆娘知道可以怎麼加開班。";
@@ -1877,6 +1952,16 @@ function openDay(d){
   $("#dayMask").classList.remove("hide");
 }
 function syncModal(){
+  if(DRAFT.fromWeekly){
+    $$("#dSeg button").forEach(b=>{ b.classList.remove("on"); b.disabled=true; });
+    $("#dApply").innerHTML = `<div class="warnbox">這天是每週固定必休，如需異動請直接找老闆娘調整員工設定。</div>`;
+    $("#dPoolWrap").classList.add("hide");
+    $("#dTimeWrap").classList.add("hide");
+    $("#dExtraWrap").classList.add("hide");
+    $("#dSave").disabled = true;
+    $("#dSave").textContent = "已鎖定";
+    return;
+  }
   $$("#dSeg button").forEach(b=>b.classList.toggle("on", b.dataset.s===DRAFT.state));
   // 選了「必休」才判斷是否需要走申請
   const napp = (DRAFT.state==="must" && DAY) ? needsApplication(ME.uid, DAY) : null;
@@ -1905,7 +1990,8 @@ function syncModal(){
     $("#dEnd").value  =(DRAFT.window&&DRAFT.window.end)||"10:00";
   }
   if(DRAFT.state==="extra"){
-    const win=(SETTINGS[ME.uid]&&SETTINGS[ME.uid].window)||null;
+    const [wy,wm]=MONTH.split("-").map(Number);
+    const win=windowFor(ME.uid, isHol(wy,wm,Number(DAY)));
     $("#dExStart").value=(DRAFT.window&&DRAFT.window.start)||(win&&win.start)||"06:00";
     $("#dExEnd").value  =(DRAFT.window&&DRAFT.window.end)||(win&&win.end)||"10:00";
   }
@@ -1937,7 +2023,8 @@ $("#dSave").onclick=async()=>{
   if(DRAFT.state==="extra"){
     const s=$("#dExStart").value, e=$("#dExEnd").value;
     if(!s||!e||s>=e){ toast("時間不正確"); return; }
-    const win=(SETTINGS[ME.uid]&&SETTINGS[ME.uid].window)||null;
+    const [wy,wm]=MONTH.split("-").map(Number);
+    const win=windowFor(ME.uid, isHol(wy,wm,Number(DAY)));
     if(win && win.start && win.end && s>=win.start && e<=win.end){
       if(!confirm(`這個時間（${s}–${e}）在你平常固定時間（${win.start}–${win.end}）以內，沒有真的多出時段喔。\n還是要送出「可增班」嗎？`)) return;
     }

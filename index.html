@@ -169,6 +169,8 @@ input,select{font-family:inherit;font-size:15px}
 .cell.closed .d{color:#fff;opacity:.75;text-decoration:line-through}
 .cell.closed .t{color:#fff;font-weight:500;letter-spacing:.04em}
 .cell.wait::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:999px;background:var(--warn)}
+.cell .peers{position:absolute;top:3px;left:3px;min-width:12px;height:12px;padding:0 3px;border-radius:999px;
+  background:rgba(43,40,36,.55);color:#fff;font-size:8px;line-height:12px;text-align:center;font-weight:700}
 .foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .foot .c{font-size:12px;color:var(--ink2)}
 .foot .c b{color:var(--ink);font-weight:500}
@@ -410,10 +412,9 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div class="cal" id="eCal"></div>
       <div class="foot">
         <span class="c">已設定 <b class="num" id="eCnt">0</b> 天</span>
-        <button class="btn p" id="eSubmit">送出</button>
       </div>
     </div>
-    <div class="cap">點任一天即可設定。必休每天最多 2 人,依送出時間先後;額滿會排候補(格子右上小點)。</div>
+    <div class="cap">點任一天即可設定,確定就會直接送出。必休每天最多 2 人,依確定時間先後;額滿會排候補(格子右上小點)。格子左上角的小數字是同事已排必休的人數,方便彼此避開撞期。</div>
 
     <div class="card" style="margin-top:12px">
       <div class="sechd">
@@ -428,6 +429,15 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <span style="color:var(--ink3)">平日連休 3 天以內、或只休六或只休日,直接點月曆即可,免申請。</span></span>
       </div>
       <div id="clMine" class="cllist"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="sechd"><h2>本月備註</h2></div>
+      <div class="mhint">有什麼想跟老闆娘特別說明的都可以寫在這裡,例如身體狀況、排休原因、臨時狀況等。</div>
+      <textarea id="eNote" rows="3" placeholder="例:這個月剛好有..." style="width:100%;padding:10px;border:1px solid var(--line);border-radius:9px;font-family:inherit;font-size:13px;resize:vertical;margin-top:8px"></textarea>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px">
+        <button class="mbtn on" id="eNoteSave">儲存備註</button>
+      </div>
     </div>
   </div>
 
@@ -481,6 +491,9 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div class="sechd"><h2>本月可增班</h2><span class="sub" id="exCount"></span></div>
       <div id="exList" class="cllist"></div>
       <div class="cap" style="margin:0">員工自己回報「這天可以多上一點」的時段,排班或人力吃緊時可以優先找他們。</div>
+      <div class="hr"></div>
+      <div class="sechd"><h2>員工備註</h2><span class="sub" id="noteCount"></span></div>
+      <div id="noteList"></div>
     </div>
   </div>
 
@@ -507,6 +520,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 <div class="mask hide" id="dayMask">
   <div class="modal">
     <div class="mh"><div class="dd" id="dTitle"></div><div class="wd" id="dSub"></div></div>
+    <div id="dPeers"></div>
     <div class="mhint">這天你要——</div>
     <div id="dWarn"></div>
     <div id="dApply"></div>
@@ -785,6 +799,7 @@ let EDIT_UID=null, EDIT_DRAFT=null;
 const $  = s=>document.querySelector(s);
 const $$ = s=>[...document.querySelectorAll(s)];
 const pad = n=>String(n).padStart(2,"0");
+const escapeHtml = s => String(s).replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 const ymKey = d=>`${d.getFullYear()}-${pad(d.getMonth()+1)}`;
 const isHol = (y,m,d)=>{const w=new Date(y,m-1,d).getDay(); return w===0||w===6;};
 const dowOf = (y,m,d)=> new Date(y,m-1,d).getDay();
@@ -940,7 +955,8 @@ function bindMonth(){
       quota:    (v.quota===undefined||v.quota===null) ? null : v.quota,
       closures: v.closures || {},
       requests: v.requests || {},
-      blackouts:v.blackouts|| {}
+      blackouts:v.blackouts|| {},
+      notes:    v.notes    || {}
     };
     render();
   }, err=>{ console.error(err); toast("讀取失敗:" + (err.code||"請檢查 Firebase 規則")); });
@@ -1099,6 +1115,7 @@ function renderEmp(){
     c.className="cell"+(hol?" hol":"");
     let tag="";
     const off=!baseAllows(ME.uid,d);
+    const peerN = mustRank(ds).filter(x=>x.uid!==ME.uid).length;
     if(closed){
       c.classList.add("closed"); tag="店休";
     } else if(r){
@@ -1114,12 +1131,13 @@ function renderEmp(){
       c.classList.add("prefer"); tag="許願";
     }
     if(!closed && blackoutOn(d)) c.classList.add("bo");
-    c.innerHTML=`<span class="d">${d}</span>${tag?`<span class="t">${tag}</span>`:""}`;
+    c.innerHTML=`<span class="d">${d}</span>${tag?`<span class="t">${tag}</span>`:""}${peerN?`<span class="peers">${peerN}</span>`:""}`;
     if(!locked && !closed) c.onclick=()=>openDay(d);
     cal.appendChild(c);
   }
-  $("#eSubmit").disabled = locked;
   renderClMine();
+  const myNote = (MDATA.notes && MDATA.notes[ME.uid]) || "";
+  if(document.activeElement !== $("#eNote")) $("#eNote").value = myNote;
 }
 
 /* ---------- owner ---------- */
@@ -1311,6 +1329,22 @@ function renderOwner(){
         <span class="cst">可增班</span>
         <span></span>`;
       exBox.appendChild(el);
+    });
+  }
+
+  // 員工備註
+  const noteBox=$("#noteList"); noteBox.innerHTML="";
+  const noteEntries=Object.entries(MDATA.notes||{}).filter(([u,t])=>t && t.trim() && STAFF[u]);
+  $("#noteCount").textContent = noteEntries.length ? `共 ${noteEntries.length} 筆` : "";
+  if(!noteEntries.length){
+    noteBox.innerHTML = `<div class="cap" style="margin:0">這個月還沒有人填備註。</div>`;
+  } else {
+    noteEntries.forEach(([u,t])=>{
+      const el=document.createElement("div");
+      el.style.cssText="border:1px solid var(--line);border-radius:10px;padding:10px 12px;background:var(--paper);margin-bottom:8px";
+      el.innerHTML=`<div style="font-size:12px;font-weight:500;margin-bottom:4px">${escapeHtml(STAFF[u].name)}</div>
+        <div style="font-size:13px;color:var(--ink2);white-space:pre-wrap;line-height:1.5">${escapeHtml(t)}</div>`;
+      noteBox.appendChild(el);
     });
   }
 }
@@ -1720,6 +1754,9 @@ function openDay(d){
   const hc=holidayMustCount(ME.uid);
   const blocked = hol && hc>=MAX_HOLIDAY_MUST && (!cur || cur.state!=="must");
   const others = mustRank(DAY).filter(r=>r.uid!==ME.uid);
+  $("#dPeers").innerHTML = others.length
+    ? `<div class="mnote">同事已排:${others.map(r=>`${STAFF[r.uid].name}${isWaitlist(r.uid,DAY)?"(候補)":""}`).join("、")}</div>`
+    : "";
   const bo = blackoutOn(d);
   if(bo){
     $("#dWarn").innerHTML=`<div class="warnbox bo">這段期間人力吃緊${bo.reason?`(${bo.reason})`:""},可以的話請盡量避免排休。若真的有事仍可指定必休。</div>`;
@@ -1821,9 +1858,11 @@ $("#dSave").onclick=async()=>{
   await set(ref(db,`${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`), payload);
   $("#dayMask").classList.add("hide"); toast("已儲存");
 };
-$("#eSubmit").onclick=()=>{
-  const n=Object.keys(myReq()).length;
-  toast(n ? `已送出 ${n} 天` : "尚未設定任何一天");
+$("#eNoteSave").onclick=async()=>{
+  const v=$("#eNote").value.trim();
+  if(v) await set(ref(db,`${ROOT}/months/${MONTH}/notes/${ME.uid}`), v);
+  else   await remove(ref(db,`${ROOT}/months/${MONTH}/notes/${ME.uid}`));
+  toast("已儲存備註");
 };
 
 /* ============ OWNER ACTIONS ============ */

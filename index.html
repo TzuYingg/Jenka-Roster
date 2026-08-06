@@ -236,14 +236,13 @@ input,select{font-family:inherit;font-size:15px}
 .seg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-bottom:14px}
 .seg button{font-size:12px;padding:10px 2px;border-radius:9px;border:1px solid var(--line);
   background:var(--surface);color:var(--ink2)}
-.seg button.on{background:var(--clay);border-color:var(--clay);color:#fff}
-.seg button[data-s="extra"].on{background:var(--ok);border-color:var(--ok)}
+.seg button.on{background:var(--ok);border-color:var(--ok);color:#fff}
 .seg button:disabled{opacity:.4}
 .lab{font-size:11px;color:var(--ink2);margin-bottom:6px}
 .pool{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px}
 .pool button{font-size:12px;padding:10px 6px;border-radius:9px;border:1px solid var(--line);
   background:var(--surface);color:var(--ink2);text-align:center}
-.pool button.on{border-color:var(--ink);color:var(--ink);background:var(--tint)}
+.pool button.on{border-color:var(--ok);color:var(--ok);background:var(--ok-bg)}
 .pool button b{font-weight:500;display:block}
 .pool button small{font-size:10px;color:var(--ink3)}
 .pool button:disabled{opacity:.45}
@@ -251,16 +250,32 @@ input,select{font-family:inherit;font-size:15px}
 .times input{width:100%;padding:9px;border:1px solid var(--line);border-radius:9px;
   background:var(--surface);color:var(--ink);font-family:"DM Sans"}
 .mnote{font-size:11px;color:var(--ink3);margin:-6px 0 12px;line-height:1.5}
-.peerq{background:var(--surface);border-radius:12px;padding:14px 16px;margin-bottom:12px}
-.peerq .row{display:flex;align-items:center;flex-wrap:wrap;gap:14px;font-size:13px}
-.peerq .row span{display:flex;align-items:center;gap:5px}
-.peerq .row b{font-size:11px;font-weight:400;color:var(--ink3)}
-.peerq .row .wait{opacity:.55;font-style:italic}
-.peerq .cap{font-size:11px;color:var(--ink3);margin-top:8px}
+.peerbox{background:var(--tint);border-radius:12px;padding:12px 14px;margin-bottom:16px}
+.peerbox .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:9px;gap:8px}
+.peerbox .lbl{font-size:12px;font-weight:500;color:var(--ink2)}
+.peerbox .badge{font-size:11px;padding:3px 9px;border-radius:999px;font-weight:500;white-space:nowrap}
+.peerbox .badge.full{background:var(--clay-bg);color:#8a4230}
+.peerbox .badge.open{background:var(--ok-bg);color:#3f5e47}
+.peerbox .chips{display:flex;flex-wrap:wrap;gap:6px}
+.peerchip{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;
+  background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px 4px 5px}
+.peerchip .rank{width:16px;height:16px;border-radius:999px;background:var(--ink3);color:#fff;
+  font-size:10px;display:flex;align-items:center;justify-content:center;font-weight:500;flex:none}
+.peerchip.wait{border-style:dashed;color:var(--ink3);font-style:italic}
+.peerchip.wait .rank{background:var(--warn);font-style:normal}
+.peerbox .cap{font-size:11px;color:var(--ink3);margin-top:8px}
+.dsec-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.dsec-title .bar{width:3px;height:14px;background:var(--ok);display:inline-block;border-radius:2px;flex:none}
+.detailcard{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:14px}
+.detailcard .dlbl{font-size:11.5px;color:var(--ink2);display:flex;align-items:center;gap:6px;margin-bottom:8px}
+.detailcard .dlbl .dot{width:6px;height:6px;border-radius:999px;background:var(--ok);display:inline-block;flex:none}
+.detailcard>*:last-child{margin-bottom:0 !important}
 .mfoot{display:flex;gap:8px}
 .mfoot .btn{flex:1}
 .mfoot .btn.rm{color:var(--danger);border:1px solid var(--danger-bg);background:var(--danger-bg)}
 .warnbox{background:var(--warn-bg);color:#7a5a20;font-size:11.5px;padding:9px 11px;border-radius:9px;margin-bottom:12px;line-height:1.5}
+#dayMask .btn.p{background:var(--ok);color:#fff}
+#dayMask .btn.p:disabled{background:var(--ink3);opacity:.55}
 
 /* owner */
 .quota{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:9px;margin-bottom:14px}
@@ -575,37 +590,41 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   <div class="modal">
     <div class="mh"><div class="dd" id="dTitle"></div><div class="wd" id="dSub"></div></div>
     <div id="dPeers"></div>
-    <div class="mhint">這天你要——</div>
+    <div class="hr"></div>
+    <div class="dsec-title"><span class="bar"></span>這天你要——</div>
     <div id="dWarn"></div>
     <div id="dOffNote" class="hide"></div>
-    <div id="dApply"></div>
     <div class="seg" id="dSeg">
       <button data-s="must">必休</button>
       <button data-s="prefer">許願休假</button>
       <button data-s="limited">提早閃人</button>
       <button data-s="extra">可增班</button>
     </div>
-    <div id="dPoolWrap" class="hide">
-      <div class="lab">用哪一種假？</div>
+    <div id="dApply"></div>
+    <div id="dPoolWrap" class="detailcard hide">
+      <div class="dlbl"><span class="dot"></span>用哪一種假？</div>
       <div class="pool" id="dPool">
         <button data-p="normal"><b>排休</b><small>扣本月天數</small></button>
         <button data-p="annual"><b>特休</b><small id="dAnnLeft">剩 — 天</small></button>
       </div>
     </div>
-    <div id="dTimeWrap" class="hide">
+    <div id="dTimeWrap" class="detailcard hide">
+      <div class="dlbl"><span class="dot"></span>這天最晚待到幾點</div>
       <div class="times">
         <label><div class="lab">最早幾點到</div><input type="time" id="dStart" value="06:00"></label>
         <label><div class="lab">最晚到幾點</div><input type="time" id="dEnd" value="10:00"></label>
       </div>
       <div class="mnote">可上的班別會依這個時間自動判斷（全 5:30–14:30 / 早 6:00–10:00 / 午 10:00–14:30）。</div>
     </div>
-    <div id="dExtraWrap" class="hide">
+    <div id="dExtraWrap" class="detailcard hide">
+      <div class="dlbl"><span class="dot"></span>比平常多出來的時段</div>
       <div class="times">
         <label><div class="lab">最早可以幾點到</div><input type="time" id="dExStart" value="06:00"></label>
         <label><div class="lab">最晚可以待到幾點</div><input type="time" id="dExEnd" value="10:00"></label>
       </div>
       <div class="mnote" id="dExtraNote">這天比平常多出來的時段，讓老闆娘知道可以怎麼加開班。</div>
     </div>
+    <div class="hr"></div>
     <div class="mfoot">
       <button class="btn g" id="dCancel">取消</button>
       <button class="btn rm hide" id="dClear">清除</button>
@@ -1910,14 +1929,16 @@ function openDay(d){
   const others = mustRank(DAY).filter(r=>r.uid!==ME.uid);
   const alreadyMust = cur && cur.state==="must";
   if(others.length){
-    const rows = others.map((r,i)=>{
+    const confirmedCount = others.filter(r=>!isWaitlist(r.uid,DAY)).length;
+    const full = confirmedCount>=MAX_MUST_PER_DAY;
+    const chips = others.map((r,i)=>{
       const wl = isWaitlist(r.uid,DAY);
-      return `<span class="${wl?"wait":""}"><b>${i+1}</b>${escapeHtml(STAFF[r.uid].name)}${wl?"（候補）":""}</span>`;
+      return `<span class="peerchip${wl?" wait":""}"><span class="rank">${i+1}</span>${escapeHtml(STAFF[r.uid].name)}${wl?"（候補）":""}</span>`;
     });
     if(!alreadyMust && others.length>=MAX_MUST_PER_DAY){
-      rows.push(`<span class="wait"><b>${others.length+1}</b>你（候補）</span>`);
+      chips.push(`<span class="peerchip wait"><span class="rank">${others.length+1}</span>你（候補）</span>`);
     }
-    $("#dPeers").innerHTML = `<div class="peerq"><div class="row">${rows.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
+    $("#dPeers").innerHTML = `<div class="peerbox"><div class="hd"><span class="lbl">目前已排休</span><span class="badge ${full?"full":"open"}">${confirmedCount}/${MAX_MUST_PER_DAY}${full?" 已額滿":""}</span></div><div class="chips">${chips.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
   } else {
     $("#dPeers").innerHTML = "";
   }

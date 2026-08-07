@@ -334,12 +334,41 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 
 /* staff admin */
 .slist{display:flex;flex-direction:column;gap:8px}
-.srow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:11px;padding:10px 11px;
+.srow{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:11px;padding:10px 11px;
   border:1px solid var(--line);border-radius:11px;background:var(--paper)}
 .srow img{width:34px;height:34px;object-fit:contain}
 .srow .info .n{font-size:13px;font-weight:500}
 .srow .info .d{font-size:10.5px;color:var(--ink3);line-height:1.5}
 .srow.off{opacity:.5}
+.sreorder{display:flex;flex-direction:column;gap:2px}
+.sreorder button{width:22px;height:18px;padding:0;border:none;background:var(--tint);
+  border-radius:4px;color:var(--ink2);display:flex;align-items:center;justify-content:center}
+.sreorder button:disabled{opacity:.25}
+.sreorder svg{width:12px;height:12px}
+/* 填寫狀態列 */
+.roster{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+.roster::-webkit-scrollbar{display:none}
+.pcol{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;flex:none;
+  padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--paper);min-width:64px}
+.pcol.me{border-color:var(--ink)}
+.pcol .ico{width:22px;height:22px;object-fit:contain}
+.pcol .pname{font-size:11px;color:var(--ink);white-space:nowrap;max-width:64px;overflow:hidden;text-overflow:ellipsis}
+.pcol .pname.me{font-weight:600}
+.pcol .pstat{display:flex;align-items:center;justify-content:center;gap:4px;font-size:10px}
+.pcol .dot{width:6px;height:6px;border-radius:50%;flex:none}
+.pcol .dot.none{background:var(--ink3)}
+.pcol .dot.doing{background:var(--warn)}
+.pcol .dot.done{background:var(--ok)}
+.pcol .pstat.none{color:var(--ink3)}
+.pcol .pstat.doing{color:#7a5a20}
+.pcol .pstat.done{color:#3f5e47}
+/* 本月排休已完成按鈕 */
+.donebtn{width:100%;padding:11px;border-radius:11px;border:1px solid var(--ok);background:var(--ok);
+  color:#fff;font-size:13.5px;font-weight:500;display:flex;align-items:center;justify-content:center;
+  gap:6px;margin-top:10px}
+.donebtn.on{background:var(--surface);border-color:var(--line);color:var(--ink2)}
+.donebtn:disabled{opacity:.4}
+.donebtn svg{width:16px;height:16px}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .fgrid.one{grid-template-columns:1fr}
 .fld label{display:block;font-size:11px;color:var(--ink2);margin-bottom:5px}
@@ -523,6 +552,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   <!-- employee -->
   <div id="empView">
     <div id="empCalPane">
+    <div class="card" style="margin-bottom:12px">
+      <div class="sechd"><h2>大家的填寫狀態</h2><span class="sub" id="fillCount"></span></div>
+      <div class="roster" id="fillRoster"></div>
+    </div>
+
     <button class="ruleQuick" id="ruleQuickBtn" type="button">
       <span class="lft">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
@@ -559,6 +593,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div class="foot">
         <span class="c">已設定 <b class="num" id="eCnt">0</b> 天</span>
       </div>
+      <button class="donebtn" id="doneToggleBtn" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+        <span id="doneToggleLabel">本月排休已完成</span>
+      </button>
+      <div class="cap" id="doneToggleNote" style="text-align:center;margin:8px 0 0"></div>
     </div>
     <div class="cap">點任一天即可設定，確定就會直接送出。必休每天最多 2 人，依回報時間先後排序，額滿會排候補（格子右上小點）。日期數字下方的小圓點代表同事已排必休的人數（最多疊 3 顆），點進當天可以看到完整排隊順序。</div>
 
@@ -1006,7 +1045,7 @@ const SEED_SETTINGS = {
 
 /* ============ STATE ============ */
 let ME=null, STAFF={}, SETTINGS={}, ANNUAL={}, AUTH={}, YEAR=new Date().getFullYear();
-let MONTH=null, MDATA={status:"open",quota:null,closures:{},requests:{},blackouts:{}};
+let MONTH=null, MDATA={status:"open",quota:null,closures:{},requests:{},blackouts:{},done:{}};
 let CONT_ALL={}, unsubCont=null;
 function bindContinuous(){
   if(unsubCont) return;
@@ -1233,7 +1272,8 @@ function bindMonth(){
       closures: v.closures || {},
       requests: v.requests || {},
       blackouts:v.blackouts|| {},
-      notes:    v.notes    || {}
+      notes:    v.notes    || {},
+      done:     v.done     || {}
     };
     syncWeeklyMust();
     render();
@@ -1383,7 +1423,10 @@ function renderEmp(){
   const [y,m]=MONTH.split("-").map(Number);
   const days=monthDays(MONTH), start=firstDow(MONTH);
   const mine=myReq(), locked=MDATA.status==="locked";
+  const selfDone = !!(MDATA.done && MDATA.done[ME.uid]);
   loadAdjMonths();
+  renderFillStatus();
+  syncDoneBtn(selfDone, locked);
 
   const dueM=shiftMonth(MONTH,-1);
   const [dy,dm]=dueM.split("-").map(Number);
@@ -1457,13 +1500,50 @@ function renderEmp(){
     if(!closed && blackoutOn(d)) c.classList.add("bo");
     const peerDots = peerN ? `<span class="peers">${"<span></span>".repeat(Math.min(peerN,3))}</span>` : "";
     c.innerHTML=`<span class="d">${d}</span>${peerDots}${tag?`<span class="t">${tag}</span>`:""}`;
-    if(!locked && !closed) c.onclick=()=>openDay(d);
+    if(!locked && !closed && !selfDone) c.onclick=()=>openDay(d);
+    else if(!locked && !closed && selfDone) c.onclick=()=>toast("已完成本月排休，如需修改請先點「取消完成」");
     cal.appendChild(c);
   }
   renderClMine();
   const myNote = (MDATA.notes && MDATA.notes[ME.uid]) || "";
   if(document.activeElement !== $("#eNote")) $("#eNote").value = myNote;
 }
+
+/* 大家的填寫狀態：未填寫／填寫中／已完成，順序照員工設定 */
+const FILL_LABEL={none:"未填寫",doing:"填寫中",done:"已完成"};
+function renderFillStatus(){
+  const box=$("#fillRoster"); if(!box) return;
+  const active=Object.entries(STAFF)
+    .filter(([,s])=>s.active!==false)
+    .sort((a,b)=>(a[1].order||99)-(b[1].order||99));
+  const rows=active.map(([uid,s])=>{
+    const done = !!(MDATA.done && MDATA.done[uid]);
+    const filled = Object.keys((MDATA.requests && MDATA.requests[uid]) || {}).length>0;
+    const status = done ? "done" : (filled ? "doing" : "none");
+    const me = uid===ME.uid;
+    return `<div class="pcol${me?" me":""}">
+      <img class="ico" src="${avatarOf(s.animal)}" alt="">
+      <span class="pname${me?" me":""}">${me?"你":escapeHtml(s.name)}</span>
+      <span class="pstat ${status}"><span class="dot ${status}"></span>${FILL_LABEL[status]}</span>
+    </div>`;
+  });
+  box.innerHTML = rows.join("");
+  const doneCount = active.filter(([uid])=>MDATA.done && MDATA.done[uid]).length;
+  $("#fillCount").textContent = `${doneCount} / ${active.length} 已完成`;
+}
+function syncDoneBtn(selfDone, mLocked){
+  const btn=$("#doneToggleBtn"), label=$("#doneToggleLabel"), note=$("#doneToggleNote");
+  if(!btn) return;
+  btn.classList.toggle("on", selfDone);
+  label.textContent = selfDone ? "已完成，點此取消" : "本月排休已完成";
+  btn.disabled = mLocked;
+  note.textContent = mLocked ? "" : (selfDone ? "月曆已鎖定，取消完成後才能繼續修改" : "");
+}
+$("#doneToggleBtn").onclick=async()=>{
+  if(MDATA.status==="locked") return;
+  const cur = !!(MDATA.done && MDATA.done[ME.uid]);
+  await set(ref(db,`${ROOT}/months/${MONTH}/done/${ME.uid}`), !cur);
+};
 
 /* ---------- owner ---------- */
 function renderOwner(){
@@ -1673,7 +1753,7 @@ function renderStaff(){
   const entries=Object.entries(STAFF).sort((a,b)=>(a[1].order||99)-(b[1].order||99));
   const active=entries.filter(([,s])=>s.active!==false);
   const off=entries.filter(([,s])=>s.active===false);
-  const buildRow=(uid,s)=>{
+  const buildRow=(uid,s,idx,total)=>{
     const st=SETTINGS[uid]||{}, an=ANNUAL[uid]||{};
     const winWd = st.windowWeekday || st.window;
     const winWe = st.windowWeekend || st.window;
@@ -1687,16 +1767,30 @@ function renderStaff(){
     const row=document.createElement("div");
     row.className="srow"+(s.active===false?" off":"");
     const p = permOf(uid);
+    const reorderHtml = (idx==null) ? "" : `<div class="sreorder">
+        <button type="button" data-dir="-1" ${idx===0?"disabled":""} aria-label="往上移">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 15l6-6 6 6"/></svg>
+        </button>
+        <button type="button" data-dir="1" ${idx===total-1?"disabled":""} aria-label="往下移">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>`;
     row.innerHTML=`<img src="${avatarOf(s.animal)}" alt="">
       <div class="info"><div class="n">${s.name}${s.active===false?"（停用）":""}${p!=="self"?` <span style="color:var(--ok);font-weight:400">· ${PERM_LABEL[p]}</span>`:""}</div>
       <div class="d">${s.role} · ${full?dt:`<span style="color:var(--warn)">只上${dt}</span>`} · ${win}${wa?` · 每週${wa}許願休假`:""} · 特休 ${(an.total||0)-(an.used||0)}/${an.total||0}</div></div>
+      ${reorderHtml}
       <span style="color:var(--ink3);font-size:11px">編輯</span>`;
     row.onclick=()=>openStaff(uid);
+    if(idx!=null){
+      row.querySelectorAll(".sreorder button").forEach(btn=>{
+        btn.onclick=(ev)=>{ ev.stopPropagation(); moveStaff(uid, Number(btn.dataset.dir)); };
+      });
+    }
     return row;
   };
 
   const list=$("#sList"); list.innerHTML="";
-  active.forEach(([uid,s])=>list.appendChild(buildRow(uid,s)));
+  active.forEach(([uid,s],i)=>list.appendChild(buildRow(uid,s,i,active.length)));
 
   const offToggle=$("#sOffToggle"), offBox=$("#sOffList");
   if(!off.length){
@@ -1714,6 +1808,22 @@ $("#sOffToggle").onclick=()=>{
   $("#sOffList").classList.toggle("hide", open);
   $("#sOffArrow").textContent = open ? "▾" : "▴";
 };
+async function moveStaff(uid,dir){
+  if(!ME || ME.perm!=="full") return;
+  const active=Object.entries(STAFF)
+    .filter(([,s])=>s.active!==false)
+    .sort((a,b)=>(a[1].order||99)-(b[1].order||99))
+    .map(([id])=>id);
+  const i=active.indexOf(uid);
+  const j=i+dir;
+  if(i<0 || j<0 || j>=active.length) return;
+  [active[i],active[j]]=[active[j],active[i]];
+  const upd={};
+  active.forEach((id,k)=>{ upd[`${ROOT}/staff/${id}/order`]=k+1; });
+  await update(ref(db), upd);
+  await reloadRefs();
+  renderStaff();
+}
 function openStaff(uid){
   EDIT_UID=uid;
   const s = uid ? (STAFF[uid]||{}) : {name:"",role:"工讀",animal:"rabbit",active:true};

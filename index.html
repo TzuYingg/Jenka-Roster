@@ -417,6 +417,23 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .ruleQuick .lft{display:flex;align-items:center;gap:7px;text-align:left}
 .ruleQuick svg{width:15px;height:15px;flex:none}
 .ruleQuick .lft svg{color:var(--warn)}
+/* 頂部角度切換 */
+.angletoggle{background:var(--tint);border-radius:999px;padding:3px;display:flex;gap:2px}
+.angletoggle button{font-size:11px;padding:6px 12px;border-radius:999px;border:none;background:none;color:var(--ink3)}
+.angletoggle button.on{background:var(--surface);color:var(--ink);font-weight:500}
+/* 管理分頁的紅點提醒 */
+.subtabs .iconwrap{position:relative}
+.subtabs .badge{display:none;position:absolute;top:-5px;right:-8px;background:var(--clay);color:#fff;
+  font-size:10px;line-height:1;font-weight:500;min-width:15px;height:15px;border-radius:999px;
+  align-items:center;justify-content:center;padding:0 3px}
+.subtabs .badge.show{display:flex}
+/* 顯示更多 / 過去紀錄（人力吃緊期、店休設定共用） */
+.moretoggle{width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:9px 12px;border-radius:10px;border:1px dashed var(--line);background:none;
+  color:var(--ink2);font-size:12px;margin-top:8px}
+.moretoggle svg{width:15px;height:15px;transition:transform .15s}
+.moretoggle.open svg{transform:rotate(180deg)}
+.borow.hist{opacity:.65}
 .cllist{display:flex;flex-direction:column;gap:7px}
 .clrow{display:grid;grid-template-columns:auto 1fr auto auto;align-items:center;gap:10px;
   padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--paper)}
@@ -495,9 +512,10 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div><div class="nm" id="myName"></div><div class="rl" id="myRole"></div></div>
     </div>
     <div class="rt">
-      <button class="mbtn on" id="navEmp">我的排休</button>
-      <button class="mbtn hide" id="navStaff">員工設定</button>
-      <button class="mbtn hide" id="navOwner">老闆檢視</button>
+      <div class="angletoggle hide" id="angleToggle">
+        <button class="on" id="angleSched">排班</button>
+        <button id="angleMgmt">管理</button>
+      </div>
       <button class="mbtn" id="logout">登出</button>
     </div>
   </div>
@@ -599,24 +617,12 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <span style="color:var(--ink3)">天（依政府行事曆）· 套用所有正職</span>
         <button class="mbtn" id="oQuotaSave">儲存</button>
       </div>
-      <div class="sechd"><h2>連續休假申請</h2><span class="sub" id="clCount"></span></div>
-      <div id="clInbox"></div>
-      <div class="hr"></div>
-
-      <div class="sechd">
-        <h2>人力吃緊期</h2>
-        <button class="mbtn" id="boAdd">新增期間</button>
-      </div>
-      <div id="boList" class="bolist"></div>
-      <div class="cap" style="margin:0 0 14px">例：有人出國。員工月曆會標示並提醒盡量避免排休（不強制擋）。</div>
-      <div class="hr"></div>
-
       <div class="sechd"><h2>回報狀況</h2><span class="sub" id="oReport"></span></div>
       <div id="oRoster" style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px"></div>
       <div class="sechd" style="margin-bottom:8px"><h2 style="font-size:13px">本月應休天數</h2><span class="sub">僅列正職</span></div>
       <div class="quota" id="oQuotaList"></div>
       <div class="hr"></div>
-      <div class="sechd"><h2>排休彙整</h2><span class="sub">點格子可設店休 · 必休已鎖定</span></div>
+      <div class="sechd"><h2>排休彙整</h2><span class="sub">必休已鎖定 · 店休請至「申請與公告」設定</span></div>
       <div class="gwrap"><table class="grid" id="oGrid"></table></div>
       <div class="cap">
         <span style="color:var(--clay)">必</span> 必休 ·
@@ -635,6 +641,47 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div class="sechd"><h2>員工備註</h2><span class="sub" id="noteCount"></span></div>
       <div id="noteList"></div>
     </div>
+    <div class="subtabs-spacer"></div>
+  </div>
+
+  <!-- announce: 連續休假申請 + 人力吃緊期 + 店休設定 -->
+  <div id="announceView" class="hide">
+    <div class="card">
+      <div class="sechd"><h2>連續休假申請</h2><span class="sub" id="clCount"></span></div>
+      <div id="clInbox"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="sechd">
+        <h2>人力吃緊期</h2>
+        <button class="mbtn" id="boAdd">＋新增期間</button>
+      </div>
+      <div id="boUpcoming" class="bolist"></div>
+      <div id="boMoreWrap"></div>
+      <button class="moretoggle hide" id="boHistToggle" type="button">
+        <span>過去紀錄</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="bolist hide" id="boHist" style="margin-top:8px"></div>
+      <div class="cap" style="margin:10px 0 0">例：有人出國。員工月曆會標示並提醒盡量避免排休（不強制擋）。日期近的排在最上面。</div>
+    </div>
+
+    <div class="card" style="margin-top:12px">
+      <div class="sechd">
+        <h2>店休設定</h2>
+        <button class="mbtn" id="caAdd">＋新增店休日</button>
+      </div>
+      <div id="caUpcoming" class="bolist"></div>
+      <div id="caMoreWrap"></div>
+      <button class="moretoggle hide" id="caHistToggle" type="button">
+        <span>過去紀錄</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+      </button>
+      <div class="bolist hide" id="caHist" style="margin-top:8px"></div>
+      <div class="cap" style="margin:10px 0 0">設定後全店不排班，員工月曆跟排休彙整表會自動標成店休。日期近的排在最上面。</div>
+    </div>
+
+    <div class="subtabs-spacer"></div>
   </div>
 
   <!-- staff admin -->
@@ -650,6 +697,27 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       </button>
       <div class="slist hide" id="sOffList" style="margin-top:8px"></div>
       <div class="cap">點任一位可編輯：名字、身分、動物、可上日型、固定時間窗、每週固定許願休假／必休、特休天數、PIN。</div>
+    </div>
+    <div class="subtabs-spacer"></div>
+  </div>
+
+  <div class="subtabs hide" id="mgmtTabs">
+    <div class="inner">
+      <button id="mgmtTabOwner" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>
+        檢視排班
+      </button>
+      <button id="mgmtTabAnnounce" type="button">
+        <span class="iconwrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3a4 4 0 0 0-4 4v2.5c0 .9-.36 1.77-1 2.4L5 14h14l-2-2.1c-.64-.63-1-1.5-1-2.4V7a4 4 0 0 0-4-4z"/><path d="M9.5 18a2.5 2.5 0 0 0 5 0"/></svg>
+          <span class="badge" id="announceBadge"></span>
+        </span>
+        申請與公告
+      </button>
+      <button id="mgmtTabStaff" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>
+        員工設定
+      </button>
     </div>
   </div>
 </div>
@@ -704,14 +772,20 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   </div>
 </div>
 
-<!-- closure modal -->
-<div class="mask c hide" id="closeMask">
+<!-- closure add modal -->
+<div class="mask c hide" id="caMask">
   <div class="modal">
-    <div class="mh"><div class="dd" id="cTitle"></div><div class="wd">店休設定</div></div>
-    <div class="mhint">設為店休後，這天全店不營業、不排班，月曆會標成深色。</div>
+    <div class="mh"><div class="dd">新增店休日</div></div>
+    <div class="mhint">設為店休後，這天全店不營業、不排班，員工月曆會標成深色。</div>
+    <div class="fgrid one">
+      <div class="fld"><label>日期</label><input type="date" id="caDate"></div>
+    </div>
+    <div class="fgrid one">
+      <div class="fld"><label>原因（員工看得到）</label><input id="caReason" placeholder="例：中秋連假店休"></div>
+    </div>
     <div class="mfoot">
-      <button class="btn g" id="cCancel">取消</button>
-      <button class="btn p" id="cToggle">設為店休</button>
+      <button class="btn g" id="caCancel">取消</button>
+      <button class="btn p" id="caSave">儲存</button>
     </div>
   </div>
 </div>
@@ -794,11 +868,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 <!-- blackout modal -->
 <div class="mask c hide" id="boMask">
   <div class="modal">
-    <div class="mh"><div class="dd">人力吃緊期</div><div class="wd" id="boMonthLbl"></div></div>
+    <div class="mh"><div class="dd">人力吃緊期</div></div>
     <div class="mhint">標記後，員工月曆會顯示提醒，請大家盡量避免排休。</div>
     <div class="fgrid">
-      <div class="fld"><label>開始日</label><input class="num" id="boStart" inputmode="numeric" placeholder="1"></div>
-      <div class="fld"><label>結束日</label><input class="num" id="boEnd" inputmode="numeric" placeholder="14"></div>
+      <div class="fld"><label>開始日</label><input type="date" id="boStart"></div>
+      <div class="fld"><label>結束日</label><input type="date" id="boEnd"></div>
     </div>
     <div class="fgrid one">
       <div class="fld"><label>原因（員工看得到）</label><input id="boReason" placeholder="例：珮羽出國"></div>
@@ -1098,8 +1172,7 @@ function loginAs(uid){
   $("#avatar").innerHTML=`<img src="${avatarOf(ME.animal)}" alt="">`;
   $("#myName").textContent=ME.name;
   $("#myRole").textContent=ME.role;
-  if(ME.perm==="full" || ME.perm==="view"){ $("#navOwner").classList.remove("hide"); }
-  if(ME.perm==="full"){ $("#navStaff").classList.remove("hide"); }
+  if(ME.perm==="full" || ME.perm==="view"){ $("#angleToggle").classList.remove("hide"); }
   syncNav();
   MONTH = nextMonth();
   bindMonth();
@@ -1169,24 +1242,36 @@ function bindMonth(){
 ["#ePrev","#oPrev"].forEach(s=>$(s).onclick=()=>{MONTH=shiftMonth(MONTH,-1);bindMonth();});
 ["#eNext","#oNext"].forEach(s=>$(s).onclick=()=>{MONTH=shiftMonth(MONTH,1);bindMonth();});
 
-$("#navEmp").onclick=()=>{
-  VIEW = "emp";
+let ANGLE="sched", MGMT_TAB="owner";
+$("#angleSched").onclick=()=>{
+  ANGLE="sched"; VIEW="emp";
   syncNav(); render();
 };
-$("#navOwner").onclick=()=>{
-  VIEW = "owner";
+$("#angleMgmt").onclick=()=>{
+  ANGLE="mgmt"; VIEW=MGMT_TAB;
   syncNav(); render();
 };
-$("#navStaff").onclick=()=>{
-  VIEW = "staff";
+$("#mgmtTabOwner").onclick=()=>{
+  MGMT_TAB="owner"; VIEW="owner";
+  syncNav(); render();
+};
+$("#mgmtTabAnnounce").onclick=()=>{
+  MGMT_TAB="announce"; VIEW="announce";
+  syncNav(); render();
+};
+$("#mgmtTabStaff").onclick=()=>{
+  if(!ME || ME.perm!=="full") return;
+  MGMT_TAB="staff"; VIEW="staff";
   syncNav(); render();
 };
 function syncNav(){
-  $("#navEmp").classList.toggle("on", VIEW==="emp");
-  $("#navOwner").classList.toggle("on", VIEW==="owner");
-  $("#navStaff").classList.toggle("on", VIEW==="staff");
-  $("#navOwner").textContent = (ME && ME.perm==="view") ? "排休總覽" : "老闆檢視";
-  $("#navStaff").textContent = "員工設定";
+  $("#angleSched").classList.toggle("on", ANGLE==="sched");
+  $("#angleMgmt").classList.toggle("on", ANGLE==="mgmt");
+  $("#mgmtTabs").classList.toggle("hide", ANGLE!=="mgmt");
+  $("#mgmtTabOwner").classList.toggle("on", VIEW==="owner");
+  $("#mgmtTabAnnounce").classList.toggle("on", VIEW==="announce");
+  $("#mgmtTabStaff").classList.toggle("on", VIEW==="staff");
+  $("#mgmtTabStaff").classList.toggle("hide", !(ME && ME.perm==="full"));
 }
 
 /* 員工端底部分頁：我的排休 / 連續休假申請 */
@@ -1276,15 +1361,20 @@ function render(){
     $("#eMonth").textContent=label;
     $("#oMonth").textContent=label;
     const perm = (ME && ME.perm) || "self";
-    const v = VIEW==="owner" ? ((perm==="full"||perm==="view")?"owner":"emp")
-            : VIEW==="staff" ? (perm==="full"?"staff":"emp")
+    const canMgmt = perm==="full" || perm==="view";
+    const v = VIEW==="owner"    ? (canMgmt?"owner":"emp")
+            : VIEW==="announce" ? (canMgmt?"announce":"emp")
+            : VIEW==="staff"    ? (perm==="full"?"staff":"emp")
             : "emp";
-    $("#empView").classList.toggle("hide",   v!=="emp");
-    $("#ownerView").classList.toggle("hide", v!=="owner");
-    $("#staffView").classList.toggle("hide", v!=="staff");
-    if(v==="emp")        renderEmp();
-    else if(v==="owner") renderOwner();
-    else                 renderStaff();
+    $("#empView").classList.toggle("hide",     v!=="emp");
+    $("#ownerView").classList.toggle("hide",   v!=="owner");
+    $("#announceView").classList.toggle("hide",v!=="announce");
+    $("#staffView").classList.toggle("hide",   v!=="staff");
+    if(v==="emp")            renderEmp();
+    else if(v==="owner")     renderOwner();
+    else if(v==="announce")  renderAnnounce();
+    else                     renderStaff();
+    if(canMgmt) updateAnnounceBadge();
   }catch(e){ console.error("render error",e); toast("畫面錯誤，請重新整理"); }
 }
 
@@ -1419,32 +1509,6 @@ function renderOwner(){
     rosterBox.appendChild(el);
   });
 
-  renderClInbox();
-
-  // 人力吃緊期清單
-  $("#boAdd").classList.toggle("hide", !canAct);
-  const bl=$("#boList"); bl.innerHTML="";
-  const bans=blackoutRanges();
-  if(!bans.length){
-    bl.innerHTML=`<div class="boempty">尚未設定。有人要出國、或需要全員配合時，在此標記期間。</div>`;
-  } else {
-    bans.forEach(b=>{
-      const el=document.createElement("div");
-      el.className="borow";
-      el.innerHTML=`<span class="bdate num">${m}/${Number(b.start)} – ${m}/${Number(b.end)}</span>
-        <span class="brs">${b.reason||"人力吃緊"}</span>
-        ${canAct ? `<button class="bdel" data-id="${b.id}">刪除</button>` : `<span></span>`}`;
-      if(canAct){
-        el.querySelector(".bdel").onclick=async(ev)=>{
-          ev.stopPropagation();
-          await remove(ref(db,`${ROOT}/months/${MONTH}/blackouts/${b.id}`));
-          toast("已刪除");
-        };
-      }
-      bl.appendChild(el);
-    });
-  }
-
   const q=$("#oQuotaList"); q.innerHTML="";
   const fullTimers = uids.filter(u=>STAFF[u].role==="正職");
   q.previousElementSibling.classList.toggle("hide", fullTimers.length===0);
@@ -1503,7 +1567,6 @@ function renderOwner(){
           td.title="這人這天的可上日型設定已不排班，但仍留有這筆舊資料，建議確認一下";
         }
       } else if(autoPrefer(u,d)){ td.classList.add("prefer"); td.textContent="許"; }
-      td.onclick=()=>openClosure(d);
       tr.appendChild(td);
     }
     tb.appendChild(tr);
@@ -1944,6 +2007,110 @@ function renderClInbox(){
   wireHistToggle("clHistToggleOwner","clHistBodyOwner");
 }
 
+/* ===== 申請與公告：人力吃緊期／店休（跨月彙整） ===== */
+let ANNOUNCE_BO=[], ANNOUNCE_CA=[];
+const ANNOUNCE_BACK_MONTHS=1, ANNOUNCE_FWD_MONTHS=4;
+async function loadAnnounceRanges(){
+  if(!MONTH) return;
+  const keys=[];
+  for(let i=-ANNOUNCE_BACK_MONTHS;i<=ANNOUNCE_FWD_MONTHS;i++) keys.push(shiftMonth(MONTH,i));
+  const snaps = await Promise.all(keys.map(mk=>get(ref(db,`${ROOT}/months/${mk}`))));
+  const bo=[], ca=[];
+  snaps.forEach((snap,i)=>{
+    const mk=keys[i], v=snap.val()||{};
+    Object.entries(v.blackouts||{}).forEach(([id,b])=>{
+      if(!b||!b.start||!b.end) return;
+      bo.push({id, mk, reason:b.reason||"人力吃緊",
+        dateStart:`${mk}-${b.start}`, dateEnd:`${mk}-${b.end}`});
+    });
+    Object.entries(v.closures||{}).forEach(([day,c])=>{
+      ca.push({mk, day, reason:(c&&c.reason)||"店休", date:`${mk}-${day}`});
+    });
+  });
+  bo.sort((a,b)=>a.dateStart.localeCompare(b.dateStart));
+  ca.sort((a,b)=>a.date.localeCompare(b.date));
+  ANNOUNCE_BO=bo; ANNOUNCE_CA=ca;
+  renderAnnounceLists();
+}
+function bindDelButtons(container){
+  if(!container) return;
+  container.querySelectorAll(".bdel").forEach(btn=>{
+    btn.onclick=async(ev)=>{
+      ev.stopPropagation();
+      if(!confirm("確定要刪除嗎？")) return;
+      if(btn.dataset.kind==="bo") await remove(ref(db,`${ROOT}/months/${btn.dataset.mk}/blackouts/${btn.dataset.id}`));
+      else await remove(ref(db,`${ROOT}/months/${btn.dataset.mk}/closures/${btn.dataset.day}`));
+      toast("已刪除");
+      loadAnnounceRanges();
+    };
+  });
+}
+function renderCollapsibleList(items, endDateFn, opts, rowFn){
+  const today=todayISO();
+  const upcoming = items.filter(it=>endDateFn(it)>=today);
+  const past = items.filter(it=>endDateFn(it)<today).slice().reverse();
+  const shown = upcoming.slice(0,3), extra = upcoming.slice(3);
+  const upBox=$("#"+opts.upcoming), moreWrap=$("#"+opts.moreWrap);
+  const histToggle=$("#"+opts.histToggle), histBox=$("#"+opts.hist);
+  upBox.innerHTML = shown.length ? shown.map(it=>rowFn(it,false)).join("") : `<div class="boempty">尚未設定。</div>`;
+  if(extra.length){
+    moreWrap.innerHTML = `<button class="moretoggle" id="${opts.moreBtn}" type="button"><span>顯示更多（${extra.length}）</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></button>
+      <div class="bolist hide" id="${opts.moreBody}" style="margin-top:8px">${extra.map(it=>rowFn(it,false)).join("")}</div>`;
+    wireHistToggle(opts.moreBtn, opts.moreBody);
+  } else {
+    moreWrap.innerHTML="";
+  }
+  if(past.length){
+    histToggle.classList.remove("hide");
+    histToggle.querySelector("span").textContent = `過去紀錄（${past.length}）`;
+    histBox.innerHTML = past.map(it=>rowFn(it,true)).join("");
+  } else {
+    histToggle.classList.add("hide");
+    histBox.classList.add("hide");
+    histBox.innerHTML="";
+  }
+  wireHistToggle(opts.histToggle, opts.hist);
+  bindDelButtons(upBox);
+  bindDelButtons($("#"+opts.moreBody));
+  bindDelButtons(histBox);
+}
+function renderAnnounceLists(){
+  const canAct = ME && ME.perm==="full";
+  $("#boAdd").classList.toggle("hide", !canAct);
+  $("#caAdd").classList.toggle("hide", !canAct);
+  renderCollapsibleList(ANNOUNCE_BO, b=>b.dateEnd, {
+    upcoming:"boUpcoming", moreWrap:"boMoreWrap", histToggle:"boHistToggle", hist:"boHist",
+    moreBtn:"boMoreToggle", moreBody:"boMoreBody"
+  }, (b,hist)=>`<div class="borow${hist?" hist":""}">
+      <span class="bdate num">${fmtRange(b.dateStart,b.dateEnd)}</span>
+      <span class="brs">${escapeHtml(b.reason)}</span>
+      ${canAct ? `<button class="bdel" data-kind="bo" data-mk="${b.mk}" data-id="${b.id}">刪除</button>` : `<span></span>`}
+    </div>`);
+  renderCollapsibleList(ANNOUNCE_CA, c=>c.date, {
+    upcoming:"caUpcoming", moreWrap:"caMoreWrap", histToggle:"caHistToggle", hist:"caHist",
+    moreBtn:"caMoreToggle", moreBody:"caMoreBody"
+  }, (c,hist)=>{
+    const [,mm,dd]=c.date.split("-");
+    return `<div class="borow${hist?" hist":""}">
+      <span class="bdate num">${Number(mm)}/${Number(dd)}</span>
+      <span class="brs">${escapeHtml(c.reason)}</span>
+      ${canAct ? `<button class="bdel" data-kind="ca" data-mk="${c.mk}" data-day="${c.day}">刪除</button>` : `<span></span>`}
+    </div>`;
+  });
+}
+function renderAnnounce(){
+  renderClInbox();
+  loadAnnounceRanges();
+}
+function updateAnnounceBadge(){
+  const badge=$("#announceBadge");
+  if(!badge) return;
+  const pend=clList().filter(c=>(c.status||"pending")==="pending").length;
+  badge.textContent = pend>99 ? "99+" : pend;
+  badge.classList.toggle("show", pend>0);
+}
+
 /* --- employee apply --- */
 $("#clAdd").onclick=()=>{
   $("#clStart").value=""; $("#clEnd").value=""; $("#clReason").value=""; $("#clPool").value="normal";
@@ -2219,44 +2386,57 @@ $("#eNoteSave").onclick=async()=>{
 };
 
 /* ============ OWNER ACTIONS ============ */
-let CDAY=null;
-function openClosure(d){
-  if(ME.perm!=="full"){ toast("僅能檢視，無法編輯"); return; }
-  CDAY=pad(d);
-  const [y,m]=MONTH.split("-").map(Number);
-  $("#cTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
-  $("#cToggle").textContent = MDATA.closures[CDAY] ? "取消店休" : "設為店休";
-  $("#closeMask").classList.remove("hide");
+// 把一段可能跨月的日期範圍，拆成每個月各自的 start/end（day-of-month），因為 blackout 是存在各月份底下
+function splitRangeByMonth(startISO,endISO){
+  const out=[]; let cur=startISO;
+  while(cur<=endISO){
+    const mk=cur.slice(0,7);
+    const lastDay=monthDays(mk);
+    const monthEnd=`${mk}-${pad(lastDay)}`;
+    const segEnd = monthEnd<endISO ? monthEnd : endISO;
+    out.push({mk, start:pad(Number(cur.slice(8,10))), end:pad(Number(segEnd.slice(8,10)))});
+    const next=new Date(segEnd+"T00:00:00"); next.setDate(next.getDate()+1);
+    cur = ymKey(next)+"-"+pad(next.getDate());
+  }
+  return out;
 }
-$("#cCancel").onclick=()=>$("#closeMask").classList.add("hide");
-$("#cToggle").onclick=async()=>{
-  const on=!!MDATA.closures[CDAY];
-  if(on) await remove(ref(db,`${ROOT}/months/${MONTH}/closures/${CDAY}`));
-  else   await set(ref(db,`${ROOT}/months/${MONTH}/closures/${CDAY}`), {reason:"店休"});
-  $("#closeMask").classList.add("hide");
-  toast(on?"已取消店休":"已設為店休");
-};
-function openBlackout(){
+$("#boAdd").onclick=()=>{
   if(ME.perm!=="full") return;
-  const [y,m]=MONTH.split("-").map(Number);
-  $("#boMonthLbl").textContent=`${y} 年 ${m} 月`;
   $("#boStart").value=""; $("#boEnd").value=""; $("#boReason").value="";
   $("#boMask").classList.remove("hide");
-}
-$("#boAdd").onclick=openBlackout;
+};
 $("#boCancel").onclick=()=>$("#boMask").classList.add("hide");
 $("#boSave").onclick=async()=>{
   if(ME.perm!=="full") return;
-  const days=monthDays(MONTH);
-  const a=parseInt($("#boStart").value,10), b=parseInt($("#boEnd").value,10);
-  if(isNaN(a)||isNaN(b)||a<1||b<1||a>days||b>days){ toast(`請填 1–${days}`); return; }
-  if(a>b){ toast("開始日不能晚於結束日"); return; }
-  const reason=$("#boReason").value.trim();
-  const id="b"+Date.now().toString(36);
-  await set(ref(db,`${ROOT}/months/${MONTH}/blackouts/${id}`),
-    {start:pad(a), end:pad(b), reason:reason||"人力吃緊"});
+  const s=$("#boStart").value, e=$("#boEnd").value;
+  if(!s||!e){ toast("請選開始日跟結束日"); return; }
+  if(s>e){ toast("開始日不能晚於結束日"); return; }
+  const reason=$("#boReason").value.trim()||"人力吃緊";
+  const segs=splitRangeByMonth(s,e);
+  const idBase="b"+Date.now().toString(36);
+  await Promise.all(segs.map((seg,i)=>
+    set(ref(db,`${ROOT}/months/${seg.mk}/blackouts/${idBase}${i}`), {start:seg.start, end:seg.end, reason})
+  ));
   $("#boMask").classList.add("hide");
   toast("已新增");
+  loadAnnounceRanges();
+};
+$("#caAdd").onclick=()=>{
+  if(ME.perm!=="full") return;
+  $("#caDate").value=""; $("#caReason").value="";
+  $("#caMask").classList.remove("hide");
+};
+$("#caCancel").onclick=()=>$("#caMask").classList.add("hide");
+$("#caSave").onclick=async()=>{
+  if(ME.perm!=="full") return;
+  const d=$("#caDate").value;
+  if(!d){ toast("請選日期"); return; }
+  const mk=d.slice(0,7), day=pad(Number(d.slice(8,10)));
+  const reason=$("#caReason").value.trim()||"店休";
+  await set(ref(db,`${ROOT}/months/${mk}/closures/${day}`), {reason});
+  $("#caMask").classList.add("hide");
+  toast("已新增");
+  loadAnnounceRanges();
 };
 $("#oLock").onclick=async()=>{
   if(ME.perm!=="full") return;

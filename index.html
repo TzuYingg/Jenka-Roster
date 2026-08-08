@@ -1072,10 +1072,13 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
     <div class="lab">每週固定必休</div>
     <div class="wdays" id="stWeeklyMust"></div>
     <div class="cap" style="margin:0 0 12px">點選星期，系統每月自動排入真正的必休（不占用每天 2 人上限，一定會保留給他）。</div>
-    <div class="fgrid">
-      <div class="fld"><label>本年特休（天）</label><input class="num" id="stAnnTotal" inputmode="numeric" placeholder="0"></div>
-      <div class="fld"><label>已用特休（天）</label><input class="num" id="stAnnUsed" inputmode="numeric" placeholder="0"></div>
+    <div class="fgrid one">
+      <div class="fld"><label>到職日</label><input type="date" id="stHireDate"></div>
     </div>
+    <div class="fgrid one">
+      <div class="fld"><label>特休加減天數（選填，正職通常留 0）</label><input class="num" id="stAnnTotal" inputmode="numeric" placeholder="0"></div>
+    </div>
+    <div class="cap" id="stAnnInfo" style="margin:-6px 0 12px">請先填到職日</div>
     <div class="fgrid one">
       <div class="fld"><label>PIN（4 位數）</label><input class="num" id="stPin" inputmode="numeric" maxlength="4" placeholder="1234"></div>
     </div>
@@ -1189,6 +1192,22 @@ async function loadAdjMonths(){
 let VIEW="emp", SEL_UID=null, PIN="", DAY=null, DRAFT=null, unsub=null;
 let CUR_ANN_LEFT=null;
 let EDIT_UID=null, EDIT_DRAFT=null;
+let STAFF_EDIT_ANN_USED=null;
+function updateStAnnInfo(){
+  const hireDate = $("#stHireDate").value;
+  const adjust = parseInt($("#stAnnTotal").value,10)||0;
+  if(!hireDate){ $("#stAnnInfo").textContent = "請先填到職日"; return; }
+  const base = statutoryAnnualDays(hireDate);
+  const total = base+adjust;
+  const baseLine = adjust
+    ? `法定 ${base} 天${adjust>0?"+":""}${adjust} 天調整＝共 ${total} 天`
+    : `法定特休 ${total} 天（依到職日自動算）`;
+  if(STAFF_EDIT_ANN_USED===null){
+    $("#stAnnInfo").textContent = `${baseLine}・已用 — 天`;
+  } else {
+    $("#stAnnInfo").textContent = `${baseLine}・已用 ${STAFF_EDIT_ANN_USED} 天・剩 ${total-STAFF_EDIT_ANN_USED} 天`;
+  }
+}
 
 const $  = s=>document.querySelector(s);
 const $$ = s=>[...document.querySelectorAll(s)];
@@ -1435,8 +1454,33 @@ const monthDays = k=>{const [y,m]=k.split("-").map(Number); return new Date(y,m,
 const firstDow  = k=>{const [y,m]=k.split("-").map(Number); return (new Date(y,m-1,1).getDay()+6)%7;};  // 週一為首
 const reqOf = uid => (MDATA.requests && MDATA.requests[uid]) || {};
 const myReq = () => reqOf(ME.uid);
-const annualLeft = uid=>{ const a=ANNUAL[uid]||{}; return (Number(a.total)||0)-(Number(a.used)||0); };
-// 精準版：把該員工全年月曆裡實際已標記「特休」的天數也算進去（不只是人事資料裡手動填的已使用天數）
+// 依到職日算法定特休天數（勞基法第38條天數表）
+function statutoryAnnualDays(hireDateISO, asOfISO){
+  if(!hireDateISO) return 0;
+  const hire=new Date(hireDateISO+"T00:00:00");
+  const asOf=asOfISO?new Date(asOfISO+"T00:00:00"):new Date();
+  if(isNaN(hire.getTime())||asOf<hire) return 0;
+  let years=asOf.getFullYear()-hire.getFullYear();
+  let months=asOf.getMonth()-hire.getMonth();
+  if(asOf.getDate()<hire.getDate()) months--;
+  if(months<0){ years--; months+=12; }
+  const totalMonths=years*12+months;
+  if(totalMonths<6)  return 0;
+  if(totalMonths<12) return 3;
+  if(totalMonths<24) return 7;
+  if(totalMonths<36) return 10;
+  if(totalMonths<60) return 14;
+  if(totalMonths<120) return 15;
+  return Math.min(30, 15+(years-10));
+}
+// 總特休天數＝到職日算出的法定天數＋人事資料裡的加減調整
+function annualTotalFor(uid){
+  const hireDate=(SETTINGS[uid]&&SETTINGS[uid].hireDate)||"";
+  const base=statutoryAnnualDays(hireDate);
+  const adjust=Number((ANNUAL[uid]&&ANNUAL[uid].adjust)||0);
+  return base+adjust;
+}
+// 精準版：剩餘天數＝本年總天數－全年月曆裡實際已標記「特休」的天數（不再看人事資料裡手動填的已使用天數，已改成系統自動判斷）
 async function annualCalendarUsed(uid, excludeMonthDay){
   const months = Array.from({length:12},(_,i)=>`${YEAR}-${pad(i+1)}`);
   const snaps = await Promise.all(months.map(mk=>get(ref(db,`${ROOT}/months/${mk}/requests/${uid}`))));
@@ -1454,7 +1498,7 @@ async function annualCalendarUsed(uid, excludeMonthDay){
 async function annualLeftAccurate(uid, excludeMonthDay){
   const a=ANNUAL[uid]||{};
   const cal=await annualCalendarUsed(uid, excludeMonthDay);
-  return (Number(a.total)||0) - (Number(a.used)||0) - cal;
+  return annualTotalFor(uid) - (Number(a.used)||0) - cal;
 }
 
 function mustRank(ds){
@@ -1778,8 +1822,14 @@ function renderOwner(){
          <div class="bar2"><i style="width:0"></i></div><span class="qm">待回報</span>`
       : `<span class="nm">${STAFF[u].name}<small>${STAFF[u].role}</small></span>
          <div class="bar2${pct>=100?" w":""}"><i style="width:${pct}%"></i></div>
-         <span class="qm">必休 <span class="num">${off}${quota?"/"+quota:""}</span> · 特休剩 <span class="num">${annualLeft(u)}</span> · 假必 <span class="num">${holidayMustCount(u)}/${MAX_HOLIDAY_MUST}</span></span>`;
+         <span class="qm">必休 <span class="num">${off}${quota?"/"+quota:""}</span> · 特休剩 <span class="num" id="qmAnn-${u}">…</span> · 假必 <span class="num">${holidayMustCount(u)}/${MAX_HOLIDAY_MUST}</span></span>`;
     q.appendChild(el);
+    if(!waiting){
+      annualLeftAccurate(u).then(left=>{
+        const el2=$(`#qmAnn-${u}`);
+        if(el2) el2.textContent=left;
+      });
+    }
   });
 
   const t=$("#oGrid"); t.innerHTML="";
@@ -1949,10 +1999,14 @@ function renderStaff(){
       </div>`;
     row.innerHTML=`<img src="${avatarOf(s.animal)}" alt="">
       <div class="info"><div class="n">${s.name}${s.active===false?"（停用）":""}${p!=="self"?` <span style="color:var(--ok);font-weight:400">· ${PERM_LABEL[p]}</span>`:""}</div>
-      <div class="d">${s.role} · ${full?dt:`<span style="color:var(--warn)">只上${dt}</span>`} · ${win}${wa?` · 每週${wa}許願休假`:""} · 特休 ${(an.total||0)-(an.used||0)}/${an.total||0}</div></div>
+      <div class="d">${s.role} · ${full?dt:`<span style="color:var(--warn)">只上${dt}</span>`} · ${win}${wa?` · 每週${wa}許願休假`:""} · 特休 <span id="annRow-${uid}">…</span>/${annualTotalFor(uid)}</div></div>
       ${reorderHtml}
       <span style="color:var(--ink3);font-size:11px">編輯</span>`;
     row.onclick=()=>openStaff(uid);
+    annualLeftAccurate(uid).then(left=>{
+      const el2=document.getElementById(`annRow-${uid}`);
+      if(el2) el2.textContent=left;
+    });
     if(idx!=null){
       row.querySelectorAll(".sreorder button").forEach(btn=>{
         btn.onclick=(ev)=>{ ev.stopPropagation(); moveStaff(uid, Number(btn.dataset.dir)); };
@@ -2000,7 +2054,7 @@ function openStaff(uid){
   EDIT_UID=uid;
   const s = uid ? (STAFF[uid]||{}) : {name:"",role:"工讀",animal:"rabbit",active:true};
   const st= uid ? (SETTINGS[uid]||{}) : {weekday:true,weekend:true,window:null,weeklyAvoid:[],weeklyMust:[]};
-  const an= uid ? (ANNUAL[uid]||{}) : {total:0,used:0};
+  const an= uid ? (ANNUAL[uid]||{}) : {adjust:0};
   EDIT_DRAFT={
     animal:s.animal||"rabbit",
     weeklyAvoid:[...(st.weeklyAvoid||[])],
@@ -2021,8 +2075,19 @@ function openStaff(uid){
   $("#stWinWdE").value = winWd?winWd.end:"";
   $("#stWinWeS").value = winWe?winWe.start:"";
   $("#stWinWeE").value = winWe?winWe.end:"";
-  $("#stAnnTotal").value = an.total||0;
-  $("#stAnnUsed").value  = an.used||0;
+  $("#stHireDate").value = st.hireDate||"";
+  $("#stAnnTotal").value = an.adjust||0;
+  $("#stAnnInfo").textContent = st.hireDate ? "已用 — 天・剩 — 天" : "請先填到職日";
+  STAFF_EDIT_ANN_USED = null;
+  if(uid){
+    annualCalendarUsed(uid).then(used=>{
+      if(EDIT_UID!==uid) return; // 期間切換到別人了，結果不套用
+      STAFF_EDIT_ANN_USED = used;
+      updateStAnnInfo();
+    });
+  } else {
+    $("#stAnnInfo").textContent = "新增員工後，填到職日就會自動算特休天數";
+  }
   $("#stPin").value = (uid && AUTH[uid] && AUTH[uid].pin) || DEFAULT_PIN;
 
   const ap=$("#stAnimals"); ap.innerHTML="";
@@ -2061,6 +2126,8 @@ function openStaff(uid){
 }
 $("#sAdd").onclick=()=>openStaff(null);
 $("#stCancel").onclick=()=>$("#staffMask").classList.add("hide");
+$("#stAnnTotal").oninput=updateStAnnInfo;
+$("#stHireDate").oninput=updateStAnnInfo;
 $("#stDel").onclick=async()=>{
   if(!EDIT_UID) return;
   const now = STAFF[EDIT_UID].active===false;
@@ -2114,11 +2181,11 @@ $("#stSave").onclick=async()=>{
     windowWeekday: wds&&wde ? {start:wds,end:wde} : null,
     windowWeekend: wes&&wee ? {start:wes,end:wee} : null,
     weeklyAvoid: EDIT_DRAFT.weeklyAvoid.sort(),
-    weeklyMust: EDIT_DRAFT.weeklyMust.sort()
+    weeklyMust: EDIT_DRAFT.weeklyMust.sort(),
+    hireDate: $("#stHireDate").value || null
   });
   await set(ref(db,`${ROOT}/annual/${YEAR}/${uid}`), {
-    total:parseInt($("#stAnnTotal").value,10)||0,
-    used: parseInt($("#stAnnUsed").value,10)||0
+    adjust:parseInt($("#stAnnTotal").value,10)||0
   });
   await set(ref(db,`${ROOT}/auth/${uid}`), {pin});
   await reloadRefs();

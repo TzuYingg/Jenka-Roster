@@ -1187,6 +1187,7 @@ async function loadAdjMonths(){
   }catch(e){ /* 讀不到就照舊只看當月，不擋主要流程 */ }
 }
 let VIEW="emp", SEL_UID=null, PIN="", DAY=null, DRAFT=null, unsub=null;
+let CUR_ANN_LEFT=null;
 let EDIT_UID=null, EDIT_DRAFT=null;
 
 const $  = s=>document.querySelector(s);
@@ -1435,6 +1436,26 @@ const firstDow  = k=>{const [y,m]=k.split("-").map(Number); return (new Date(y,m
 const reqOf = uid => (MDATA.requests && MDATA.requests[uid]) || {};
 const myReq = () => reqOf(ME.uid);
 const annualLeft = uid=>{ const a=ANNUAL[uid]||{}; return (Number(a.total)||0)-(Number(a.used)||0); };
+// 精準版：把該員工全年月曆裡實際已標記「特休」的天數也算進去（不只是人事資料裡手動填的已使用天數）
+async function annualCalendarUsed(uid, excludeMonthDay){
+  const months = Array.from({length:12},(_,i)=>`${YEAR}-${pad(i+1)}`);
+  const snaps = await Promise.all(months.map(mk=>get(ref(db,`${ROOT}/months/${mk}/requests/${uid}`))));
+  let cal=0;
+  months.forEach((mk,idx)=>{
+    const days=(snaps[idx] && snaps[idx].val())||{};
+    Object.entries(days).forEach(([dd,r])=>{
+      const key=`${mk}-${dd}`;
+      if(excludeMonthDay && key===excludeMonthDay) return;
+      if(r && r.state==="must" && r.pool==="annual") cal++;
+    });
+  });
+  return cal;
+}
+async function annualLeftAccurate(uid, excludeMonthDay){
+  const a=ANNUAL[uid]||{};
+  const cal=await annualCalendarUsed(uid, excludeMonthDay);
+  return (Number(a.total)||0) - (Number(a.used)||0) - cal;
+}
 
 function mustRank(ds){
   const rows=[];
@@ -2379,7 +2400,8 @@ $("#clAdd").onclick=()=>{
   $("#clLead").innerHTML="";
   $("#clMask").classList.remove("hide");
 };
-function updateClPreview(){
+let CL_PREVIEW_TOKEN=0;
+async function updateClPreview(){
   const s=$("#clStart").value, e=$("#clEnd").value;
   const box=$("#clLead");
   if(!s||!e){ box.innerHTML=""; return; }
@@ -2389,15 +2411,31 @@ function updateClPreview(){
   const spanNote = months.length>1
     ? `<div class="mnote">共 ${dd.length} 天，橫跨 ${months.map(k=>Number(k.split("-")[1])+"月").join("、")} — 核准後對應月份的月曆都會各自鎖入必休。</div>`
     : `<div class="mnote">共 ${dd.length} 天。</div>`;
-  box.innerHTML = spanNote + leadNote(s);
+  if($("#clPool").value==="annual"){
+    const token = ++CL_PREVIEW_TOKEN;
+    box.innerHTML = spanNote + `<div class="mnote">正在確認特休剩餘天數…</div>` + leadNote(s);
+    const left = await annualLeftAccurate(ME.uid);
+    if(token!==CL_PREVIEW_TOKEN) return; // 使用者手更快，這次結果過期了，不要覆蓋畫面
+    const annualNote = dd.length>left
+      ? `<div class="warnbox">特休僅剩 <b>${left}</b> 天，這筆申請共 ${dd.length} 天，超過剩餘天數。如果只有部分天數要用特休，請改選「排休」送出，核准後再請老闆娘把要用特休的那幾天個別改成特休。</div>`
+      : "";
+    box.innerHTML = spanNote + annualNote + leadNote(s);
+  } else {
+    box.innerHTML = spanNote + leadNote(s);
+  }
 }
 $("#clStart").oninput=updateClPreview;
 $("#clEnd").oninput=updateClPreview;
+$("#clPool").onchange=updateClPreview;
 $("#clCancel").onclick=()=>$("#clMask").classList.add("hide");
 $("#clSave").onclick=async()=>{
   const s=$("#clStart").value, e=$("#clEnd").value;
   if(!s||!e){ toast("請選開始日與結束日"); return; }
   if(s>e){ toast("開始日不能晚於結束日"); return; }
+  if($("#clPool").value==="annual"){
+    const dd=dRange(s,e), left=await annualLeftAccurate(ME.uid);
+    if(dd.length>left){ toast(`特休只剩 ${left} 天，不夠這筆申請的 ${dd.length} 天`); return; }
+  }
   const id="c"+Date.now().toString(36);
   await set(ref(db,`${ROOT}/continuous/${id}`), {
     uid:ME.uid, start:s, end:e,
@@ -2421,6 +2459,12 @@ function openReview(c){
   $("#crWho").textContent=nm;
   $("#crRange").textContent=`${fmtRange(c.start,c.end)} · ${n} 天`;
   $("#crMeta").textContent=`${c.reason||"連續休假"} · 用${c.pool==="annual"?"特休":"排休"} · 目前${CL_STATUS[c.status||"pending"]}`;
+  if(c.pool==="annual"){
+    annualLeftAccurate(c.uid).then(left=>{
+      if(CR!==c) return; // 使用者已經切到別筆申請了
+      $("#crMeta").textContent += ` · 該員工特休剩 ${left} 天`;
+    });
+  }
   const lead = (c.lead===undefined||c.lead===null) ? leadDaysFor(c.start) : c.lead;
   $("#crLead").innerHTML = lead>=LEAD_DAYS
     ? `<div class="warnbox ok">提出時距離 ${lead} 天，符合提前一個月。</div>`
@@ -2515,6 +2559,14 @@ function renderDPeers(){
   });
   $("#dPeers").innerHTML = `<div class="peerbox"><div class="hd"><span class="lbl">目前已排休</span><span class="badge ${full?"full":"open"}">${confirmedCount}/${MAX_MUST_PER_DAY}${full?" 已額滿":""}</span></div><div class="chips">${chips.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
 }
+async function refreshAnnualLeft(excludeMonthDay){
+  const left = await annualLeftAccurate(ME.uid, excludeMonthDay);
+  // 使用者可能已經關掉這天、或切到別天，這裡再次確認還是同一天才套用，避免結果套到別天上
+  if(MONTH+"-"+DAY !== excludeMonthDay) return;
+  CUR_ANN_LEFT = left;
+  $("#dAnnLeft").textContent = `剩 ${left} 天`;
+  syncModal();
+}
 function openDay(d){
   const [y,m]=MONTH.split("-").map(Number);
   DAY=pad(d);
@@ -2525,7 +2577,9 @@ function openDay(d){
   const hol=isHol(y,m,d);
   $("#dTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
   $("#dSub").textContent=`星期${"日一二三四五六"[dowOf(y,m,d)]} · ${hol?"假日":"平日"}`;
-  $("#dAnnLeft").textContent=`剩 ${annualLeft(ME.uid)} 天`;
+  CUR_ANN_LEFT = null;
+  $("#dAnnLeft").textContent="剩 — 天";
+  refreshAnnualLeft(MONTH+"-"+DAY);
   $("#dClear").classList.toggle("hide", !cur || !!(cur && cur.fromWeekly) || MDATA.status==="locked");
 
   const hc=holidayMustCount(ME.uid);
@@ -2611,7 +2665,10 @@ function syncModal(){
   if(ME.role==="工讀" && DRAFT.pool==="annual") DRAFT.pool="normal";
   $$("#dPool button").forEach(b=>{
     b.classList.toggle("on", b.dataset.p===DRAFT.pool);
-    if(b.dataset.p==="annual") b.disabled = annualLeft(ME.uid)<=0;
+    if(b.dataset.p==="annual"){
+      const noBalance = CUR_ANN_LEFT===null || CUR_ANN_LEFT<=0;
+      b.disabled = noBalance && DRAFT.pool!=="annual";
+    }
   });
   $("#dPoolWrap").classList.toggle("hide", DRAFT.state!=="must" || ME.role==="工讀");
   $("#dTimeWrap").classList.toggle("hide", DRAFT.state!=="limited");
@@ -2644,6 +2701,10 @@ $("#dClear").onclick=async()=>{
 $("#dSave").onclick=async()=>{
   if(MDATA.status==="locked") return;
   if(!DRAFT.state) return;
+  if(DRAFT.state==="must" && DRAFT.pool==="annual"){
+    const left = await annualLeftAccurate(ME.uid, MONTH+"-"+DAY);
+    if(left<=0){ toast("特休天數不夠了，請改選排休"); syncModal(); return; }
+  }
   const payload={state:DRAFT.state};
   payload.ts = (DRAFT.state==="must" && DRAFT._origMustTs) ? DRAFT._origMustTs : serverTimestamp();
   if(DRAFT.fromContinuous) payload.fromContinuous = DRAFT.fromContinuous;

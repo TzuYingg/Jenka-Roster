@@ -390,13 +390,12 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .pstat.doing{color:#7a5a20}
 .pstat.done{color:#3f5e47}
 
-/* 月曆卡片頂端：已設定天數／假日必休（左，單行完整顯示）；截止日／圖例直向堆疊在右邊，縮小佔用的橫向寬度 */
+/* 月曆卡片：截止日跟月份導覽同一行（在 mhead 內）；已設定天數／假日必休跟圖例同一行 */
 .topLine{display:flex;align-items:flex-start;gap:8px;
   font-size:11.5px;color:var(--ink3);margin-bottom:11px}
 .topLine .sep{color:var(--line)}
 .topLine b{color:var(--ink2)}
 .topLineText{flex:1;min-width:0;line-height:1.6}
-.topLineRight{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
 .legendBtn{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink3);
   border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex:none;white-space:nowrap}
 .legendBtn svg{width:11px;height:11px}
@@ -644,6 +643,7 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
           <b id="eMonth"></b>
           <button class="nav" id="eNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
+        <span class="chip" id="eDue"></span>
       </div>
       <div class="topLine">
         <span class="topLineText" id="topLineText">
@@ -651,13 +651,10 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
           <span class="sep">·</span>
           <span class="k">假日必休 <b class="num" id="eHolCnt">0 / 2</b> 天 <span style="color:var(--ink3)" id="eHolLeft"></span></span>
         </span>
-        <span class="topLineRight">
-          <span class="chip" id="eDue"></span>
-          <button class="legendBtn" id="legendToggleBtn" type="button">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-            圖例
-          </button>
-        </span>
+        <button class="legendBtn" id="legendToggleBtn" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+          圖例
+        </button>
       </div>
       <div class="legend hide" id="legendBox">
         <span><i class="sw must"></i>必休</span>

@@ -410,8 +410,6 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex:none;white-space:nowrap}
 .legendBtn svg{width:11px;height:11px}
 .legend.hide{display:none}
-.topLine2{margin-top:6px;font-size:11.5px;color:var(--ink3)}
-.topLine2.hide{display:none}
 .annualChip b{color:var(--ink2)}
 
 /* 月曆卡片底部：自己的填寫狀態＋標記完成按鈕 */
@@ -664,14 +662,13 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
           <span class="selfDays" id="selfDays">已設定 <b class="num" id="eCnt">0</b> 天</span>
           <span class="sep">·</span>
           <span class="k">假日必休 <b class="num" id="eHolCnt">0 / 2</b> 天 <span style="color:var(--ink3)" id="eHolLeft"></span></span>
+          <span class="sep hide" id="annualSep">·</span>
+          <span class="annualChip hide" id="annualChipText"></span>
         </span>
         <button class="legendBtn" id="legendToggleBtn" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
           圖例
         </button>
-      </div>
-      <div class="topLine2 hide" id="annualLine">
-        <span class="annualChip" id="annualChipText"></span>
       </div>
       <div class="legend hide" id="legendBox">
         <span><i class="sw must"></i>必休</span>
@@ -1515,13 +1512,13 @@ async function annualLeftAccurate(uid, excludeMonthDay){
 let ANNUAL_LINE_TOKEN=0;
 async function refreshAnnualLine(){
   const total=annualTotalFor(ME.uid);
-  const line=$("#annualLine");
-  if(total<=0){ line.classList.add("hide"); return; }
+  const sep=$("#annualSep"), chip=$("#annualChipText");
+  if(total<=0){ sep.classList.add("hide"); chip.classList.add("hide"); return; }
   const token=++ANNUAL_LINE_TOKEN;
   const left=await annualLeftAccurate(ME.uid);
   if(token!==ANNUAL_LINE_TOKEN) return; // 期間又切月份了，這次結果不套用
-  line.classList.remove("hide");
-  $("#annualChipText").innerHTML = `特休剩 <b class="num">${left}</b>／${total} 天`;
+  sep.classList.remove("hide"); chip.classList.remove("hide");
+  chip.innerHTML = `特休剩 <b class="num">${left}</b>／${total} 天`;
 }
 
 function mustRank(ds){

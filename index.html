@@ -2509,9 +2509,8 @@ function renderDPeers(){
   const confirmedCount = confirmedReal + (previewingMust && !previewWaitlisted ? 1 : 0);
   const full = confirmedCount>=MAX_MUST_PER_DAY;
   const chips = list.map((r,i)=>{
-    const isSelf = r.uid===ME.uid;
     const wl = r._preview ? previewWaitlisted : isWaitlist(r.uid,DAY);
-    const name = isSelf ? "你" : escapeHtml(STAFF[r.uid].name);
+    const name = escapeHtml(STAFF[r.uid].name);
     return `<span class="peerchip${wl?" wait":""}"><span class="rank">${i+1}</span>${name}${wl?"（候補）":""}</span>`;
   });
   $("#dPeers").innerHTML = `<div class="peerbox"><div class="hd"><span class="lbl">目前已排休</span><span class="badge ${full?"full":"open"}">${confirmedCount}/${MAX_MUST_PER_DAY}${full?" 已額滿":""}</span></div><div class="chips">${chips.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;

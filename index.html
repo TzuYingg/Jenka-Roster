@@ -390,14 +390,15 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .pstat.doing{color:#7a5a20}
 .pstat.done{color:#3f5e47}
 
-/* 月曆卡片頂端：已設定天數／假日必休／圖例 */
-.topLine{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--ink3);
-  margin-bottom:11px;flex-wrap:wrap}
+/* 月曆卡片頂端：已設定天數／假日必休；固定單行，太擠時文字省略號截斷，截止日＋圖例永遠完整顯示在右邊 */
+.topLine{display:flex;align-items:center;gap:8px;
+  font-size:11.5px;color:var(--ink3);margin-bottom:11px}
 .topLine .sep{color:var(--line)}
-.topLine .topSpacer{flex:1}
 .topLine b{color:var(--ink2)}
+.topLineText{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.topLineRight{display:flex;align-items:center;gap:8px;flex:none}
 .legendBtn{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink3);
-  border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex:none}
+  border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex:none;white-space:nowrap}
 .legendBtn svg{width:11px;height:11px}
 .legend.hide{display:none}
 
@@ -645,15 +646,18 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         </div>
       </div>
       <div class="topLine">
-        <span class="selfDays" id="selfDays">已設定 <b class="num" id="eCnt">0</b> 天</span>
-        <span class="sep">·</span>
-        <span class="k">假日必休 <b class="num" id="eHolCnt">0 / 2</b> 天 <span style="color:var(--ink3)" id="eHolLeft"></span></span>
-        <span class="topSpacer"></span>
-        <span class="chip" id="eDue"></span>
-        <button class="legendBtn" id="legendToggleBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
-          圖例
-        </button>
+        <span class="topLineText" id="topLineText">
+          <span class="selfDays" id="selfDays">已設定 <b class="num" id="eCnt">0</b> 天</span>
+          <span class="sep">·</span>
+          <span class="k">假日必休 <b class="num" id="eHolCnt">0 / 2</b> 天 <span style="color:var(--ink3)" id="eHolLeft"></span></span>
+        </span>
+        <span class="topLineRight">
+          <span class="chip" id="eDue"></span>
+          <button class="legendBtn" id="legendToggleBtn" type="button">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+            圖例
+          </button>
+        </span>
       </div>
       <div class="legend hide" id="legendBox">
         <span><i class="sw must"></i>必休</span>
@@ -1570,6 +1574,10 @@ function renderEmp(){
   $("#eHolCnt").textContent=`${hc} / ${MAX_HOLIDAY_MUST}`;
   $("#eHolLeft").textContent = hc>=MAX_HOLIDAY_MUST ? "· 已達上限" : `· 最多指定 ${MAX_HOLIDAY_MUST-hc} 天`;
   $("#eCnt").textContent = Object.keys(mine).length;
+  const topLineTextEl = $("#topLineText");
+  const fullTopLineText = topLineTextEl.textContent.replace(/\s+/g," ").trim();
+  topLineTextEl.title = fullTopLineText;
+  topLineTextEl.onclick = () => toast(fullTopLineText);
 
   const cal=$("#eCal"); cal.innerHTML="";
   for(let i=0;i<start;i++){

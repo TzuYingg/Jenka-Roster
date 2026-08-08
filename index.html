@@ -84,6 +84,7 @@
   --ok:#5F8268;--ok-bg:#E2ECE4;
   --warn:#B6863C;--warn-bg:#F1E6CC;
   --danger:#A2503C;--danger-bg:#EFD9D2;
+  --annual:#5C6B78;--annual-bg:#DEE2E5;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html{-webkit-text-size-adjust:100%}
@@ -200,6 +201,10 @@ input,select{font-family:inherit;font-size:15px}
 .cell.hol .d{color:var(--clay)}
 .cell.must{background:var(--clay);border-color:var(--clay)}
 .cell.must .d,.cell.must .t{color:#fff}
+/* 特休：獨立的灰藍色，跟一般必休（陶土紅）區分開，一眼就能認出 */
+.cell.must.annual{background:var(--annual-bg);border-color:var(--annual-bg)}
+.cell.must.annual .d{color:var(--annual);font-weight:600}
+.cell.must.annual .t{color:var(--annual)}
 .cell.limited{border-color:var(--clay);background:var(--surface)}
 .cell.limited .d{color:var(--clay);font-weight:500}
 .cell.limited .t{color:var(--clay)}
@@ -217,6 +222,7 @@ input,select{font-family:inherit;font-size:15px}
 .cell .peers{display:flex;gap:2px;justify-content:center;margin-top:2px}
 .cell .peers span{width:4px;height:4px;border-radius:999px;background:rgba(43,40,36,.5)}
 .cell.must .peers span,.cell.closed .peers span{background:rgba(255,255,255,.85)}
+.cell.must.annual .peers span{background:rgba(43,40,36,.45)}
 .foot{display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--line)}
 .foot .c{font-size:12px;color:var(--ink2)}
 .foot .c b{color:var(--ink);font-weight:500}
@@ -404,6 +410,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex:none;white-space:nowrap}
 .legendBtn svg{width:11px;height:11px}
 .legend.hide{display:none}
+.topLine2{margin-top:6px}
+.topLine2.hide{display:none}
+.annualChip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;
+  border-radius:999px;background:var(--annual-bg);color:var(--annual)}
+.annualChip b{color:var(--annual)}
 
 /* 月曆卡片底部：自己的填寫狀態＋標記完成按鈕 */
 .doneRow{display:flex;align-items:center;gap:6px;position:relative;
@@ -660,6 +671,9 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
           圖例
         </button>
+      </div>
+      <div class="topLine2 hide" id="annualLine">
+        <span class="annualChip" id="annualChipText"></span>
       </div>
       <div class="legend hide" id="legendBox">
         <span><i class="sw must"></i>必休</span>
@@ -1500,6 +1514,17 @@ async function annualLeftAccurate(uid, excludeMonthDay){
   const cal=await annualCalendarUsed(uid, excludeMonthDay);
   return annualTotalFor(uid) - (Number(a.used)||0) - cal;
 }
+let ANNUAL_LINE_TOKEN=0;
+async function refreshAnnualLine(){
+  const total=annualTotalFor(ME.uid);
+  const line=$("#annualLine");
+  if(total<=0){ line.classList.add("hide"); return; }
+  const token=++ANNUAL_LINE_TOKEN;
+  const left=await annualLeftAccurate(ME.uid);
+  if(token!==ANNUAL_LINE_TOKEN) return; // 期間又切月份了，這次結果不套用
+  line.classList.remove("hide");
+  $("#annualChipText").innerHTML = `特休剩 <b class="num">${left}</b>／${total} 天`;
+}
 
 function mustRank(ds){
   const rows=[];
@@ -1594,6 +1619,7 @@ function renderEmp(){
   loadAdjMonths();
   renderFillStatus();
   syncDoneBtn(selfDone, locked, Object.keys(mine).length);
+  refreshAnnualLine();
 
   const dueM=shiftMonth(MONTH,-1);
   const [dy,dm]=dueM.split("-").map(Number);
@@ -1653,7 +1679,10 @@ function renderEmp(){
       c.classList.add("closed"); tag="店休";
     } else if(r){
       c.classList.add(r.state);
-      if(r.state==="must")         tag = r.pool==="annual" ? "特休" : "排休";
+      if(r.state==="must"){
+        if(r.pool==="annual"){ tag="特休"; c.classList.add("annual"); }
+        else tag="排休";
+      }
       else if(r.state==="limited") tag = `${(r.window&&r.window.start)||""}–${(r.window&&r.window.end)||""}`;
       else if(r.state==="prefer")  tag = "許願";
       else if(r.state==="extra")   tag = `增 ${(r.window&&r.window.start)||""}–${(r.window&&r.window.end)||""}`;

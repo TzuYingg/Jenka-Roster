@@ -173,7 +173,7 @@ input,select{font-family:inherit;font-size:15px}
   display:flex;align-items:center;justify-content:center;color:var(--ink2)}
 .nav svg{width:14px;height:14px}
 .meta{display:flex;align-items:center;justify-content:space-between;padding:9px 4px;
-  border-top:1px solid var(--line);border-bottom:1px solid var(--line);margin-bottom:11px;font-size:12px}
+  border-bottom:1px solid var(--line);margin-bottom:11px;font-size:12px}
 .meta .k{color:var(--ink2)}
 .meta b{font-weight:500}
 .legend{display:flex;gap:12px;flex-wrap:wrap;padding:0 2px 11px}
@@ -391,10 +391,13 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .pstat.done{color:#3f5e47}
 
 /* 月曆卡片頂端：自己的填寫狀態＋標記完成按鈕 */
-.selfBar{display:flex;align-items:center;gap:8px;position:relative;
+.selfBar{display:flex;align-items:center;gap:6px;position:relative;
   margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--line)}
-.selfBar .pstat{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);flex:1}
+.selfBar .pstat{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);flex:none}
 .selfBar .pstat.hide{display:none}
+.selfBar .selfDays{font-size:11px;color:var(--ink3);flex:none}
+.selfBar .selfSpacer{flex:1}
+.selfBar .chip{flex:none}
 .iconDoneBtn{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--clay);
   background:var(--clay);color:#fff;display:flex;align-items:center;justify-content:center}
 .iconDoneBtn.on{background:var(--surface);border-color:var(--line);color:var(--ink2)}
@@ -620,10 +623,12 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
           <b id="eMonth"></b>
           <button class="nav" id="eNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
-        <span id="eDue"></span>
       </div>
       <div class="selfBar" id="selfBar">
-        <span class="pstat" id="selfStat"><span class="dot" id="selfDot"></span><span id="selfLabel"></span> · 已設定 <b class="num" id="eCnt">0</b> 天</span>
+        <span class="pstat" id="selfStat"><span class="dot" id="selfDot"></span><span id="selfLabel"></span></span>
+        <span class="selfDays" id="selfDays">已設定 <b class="num" id="eCnt">0</b> 天</span>
+        <span class="selfSpacer"></span>
+        <span id="eDue"></span>
         <button class="iconDoneBtn" id="doneToggleBtn" type="button">
           <svg id="doneIconCheck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
           <svg id="doneIconX" class="hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
@@ -1521,7 +1526,7 @@ function renderEmp(){
 
   const hc=holidayMustCount(ME.uid);
   $("#eHolCnt").textContent=`${hc} / ${MAX_HOLIDAY_MUST}`;
-  $("#eHolLeft").textContent = hc>=MAX_HOLIDAY_MUST ? "· 已達上限" : `· 還可指定 ${MAX_HOLIDAY_MUST-hc} 天`;
+  $("#eHolLeft").textContent = hc>=MAX_HOLIDAY_MUST ? "· 已達上限" : `· 最多指定 ${MAX_HOLIDAY_MUST-hc} 天`;
   $("#eCnt").textContent = Object.keys(mine).length;
 
   const cal=$("#eCal"); cal.innerHTML="";
@@ -1656,30 +1661,37 @@ function renderOwner(){
   $("#oQuota").disabled = !canAct;
   $("#oQuotaSave").classList.toggle("hide", !canAct);
 
-  const done=uids.filter(u=>Object.keys(reqOf(u)).length>0);
-  const miss=uids.filter(u=>Object.keys(reqOf(u)).length===0);
+  const doneList=uids.filter(u=>!!(MDATA.done && MDATA.done[u]));
+  const notDone=uids.filter(u=>!(MDATA.done && MDATA.done[u]));
   const dueM=shiftMonth(MONTH,-1);
   const [dy,dm]=dueM.split("-").map(Number);
   const dueLeft=Math.ceil((new Date(dy,dm-1,DUE_DAY)-new Date())/86400000);
-  const urgent = MDATA.status!=="locked" && miss.length>0 && !isNaN(dueLeft) && dueLeft<=3;
+  const urgent = MDATA.status!=="locked" && notDone.length>0 && !isNaN(dueLeft) && dueLeft<=3;
   $("#oReport").innerHTML = (urgent
       ? `<span style="color:var(--warn)">距截止${dueLeft<=0?"已過期":`還有 ${dueLeft} 天`}</span> · `
       : "")
-    + `已回報 <span class="num">${done.length}/${uids.length}</span>`;
+    + `已回報 <span class="num">${doneList.length}/${uids.length}</span>`;
 
   const rosterBox=$("#oRoster"); rosterBox.innerHTML="";
   uids.forEach(u=>{
     const s=STAFF[u];
-    const reported = Object.keys(reqOf(u)).length>0;
+    const filled = Object.keys(reqOf(u)).length>0;
+    const isDone = !!(MDATA.done && MDATA.done[u]);
+    const status = isDone ? "done" : (filled ? "doing" : "none");
+    const border = status==="doing" ? "var(--warn)" : "var(--line)";
+    const bg = status==="doing" ? "var(--warn-bg)" : "var(--surface)";
+    const nameColor = status==="doing" ? "color:#7a5a20" : (status==="none" ? "color:var(--ink3)" : "");
+    const chipBg = status==="done" ? "var(--ok-bg)" : status==="doing" ? "var(--warn-bg)" : "var(--tint)";
+    const chipColor = status==="done" ? "#3f5e47" : status==="doing" ? "#7a5a20" : "var(--ink3)";
     const note=(MDATA.notes && MDATA.notes[u] && MDATA.notes[u].trim()) || "";
     const el=document.createElement("div");
-    el.style.cssText=`display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid ${reported?"var(--line)":"var(--warn)"};border-radius:10px;background:${reported?"var(--surface)":"var(--warn-bg)"}`;
+    el.style.cssText=`display:flex;align-items:center;gap:10px;padding:8px 10px;border:0.5px solid ${border};border-radius:10px;background:${bg}`;
     el.innerHTML=`<img src="${avatarOf(s.animal)}" alt="" style="width:30px;height:30px;border-radius:50%;flex:none;object-fit:cover">
       <div style="flex:1;min-width:0">
-        <div style="font-size:13px;${reported?"":"color:#7a5a20"}">${escapeHtml(s.name)}</div>
+        <div style="font-size:13px;${nameColor}">${escapeHtml(s.name)}</div>
         ${note?`<div style="font-size:11px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(truncate(note,16))}</div>`:""}
       </div>
-      <span style="font-size:11px;padding:3px 9px;border-radius:999px;flex:none;background:${reported?"var(--ok-bg)":"var(--surface)"};color:${reported?"#3f5e47":"#7a5a20"}">${reported?"已回報":"待回報"}</span>`;
+      <span style="font-size:11px;padding:3px 9px;border-radius:999px;flex:none;background:${chipBg};color:${chipColor}">${FILL_LABEL[status]}</span>`;
     rosterBox.appendChild(el);
   });
 

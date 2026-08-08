@@ -212,7 +212,7 @@ input,select{font-family:inherit;font-size:15px}
 .cell.closed{background:var(--ink2);border-color:var(--ink2)}
 .cell.closed .d{color:#fff;opacity:.75;text-decoration:line-through}
 .cell.closed .t{color:#fff;font-weight:500;letter-spacing:.04em}
-.cell.wait::after{content:"";position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:999px;background:var(--warn)}
+.cell.wait::after{content:"";position:absolute;top:6px;right:6px;width:5px;height:5px;border-radius:999px;background:var(--warn)}
 .cell .peers{display:flex;gap:2px;justify-content:center;margin-top:2px}
 .cell .peers span{width:4px;height:4px;border-radius:999px;background:rgba(43,40,36,.5)}
 .cell.must .peers span,.cell.closed .peers span{background:rgba(255,255,255,.85)}
@@ -539,9 +539,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   font-size:11.5px;line-height:1.5;padding:9px 11px;border-radius:10px;margin-bottom:11px}
 .banner svg{width:14px;height:14px;flex:none;margin-top:2px}
 .banner b{font-weight:500}
-/* 月曆：吃緊期用陶土虛線外框，不搶走狀態色 */
-.cell.bo{box-shadow:inset 0 0 0 1.5px var(--clay);border-color:transparent}
-.cell.bo::before{content:"";position:absolute;top:0;left:0;right:0;height:3px;background:var(--clay);opacity:.5}
+.banner .sep{opacity:.35;margin:0 6px}
+.banner .soft{opacity:.6;font-size:10.5px}
+/* 月曆：吃緊期用左上角小圓點，跟候補提示點（右上）對齊高度 */
+.cell.bo::before{content:"";position:absolute;top:6px;left:6px;width:5px;height:5px;border-radius:999px;background:var(--clay)}
+.cell.bo.must::before{background:#fff}
 .warnbox.bo{background:var(--clay-bg);color:#8a4230}
 .bolist{display:flex;flex-direction:column;gap:7px;margin-bottom:8px}
 .borow{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
@@ -641,13 +643,13 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
           <b id="eMonth"></b>
           <button class="nav" id="eNext"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 5l7 7-7 7"/></svg></button>
         </div>
-        <span class="chip" id="eDue"></span>
       </div>
       <div class="topLine">
         <span class="selfDays" id="selfDays">已設定 <b class="num" id="eCnt">0</b> 天</span>
         <span class="sep">·</span>
         <span class="k">假日必休 <b class="num" id="eHolCnt">0 / 2</b> 天 <span style="color:var(--ink3)" id="eHolLeft"></span></span>
         <span class="topSpacer"></span>
+        <span class="chip" id="eDue"></span>
         <button class="legendBtn" id="legendToggleBtn" type="button">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
           圖例
@@ -1007,6 +1009,9 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
     </div>
     <div class="fgrid one">
       <div class="fld"><label>原因（員工看得到）</label><input id="boReason" placeholder="例：珮羽出國"></div>
+    </div>
+    <div class="fgrid one">
+      <div class="fld"><label>提醒文字（員工看得到，留空用預設）</label><input id="boNote" placeholder="請盡量避免排休"></div>
     </div>
     <div class="mfoot">
       <button class="btn g" id="boCancel">取消</button>
@@ -1552,10 +1557,11 @@ function renderEmp(){
     const [y2,m2]=MONTH.split("-").map(Number);
     bb.innerHTML = bans.map(b=>{
       const s1=Number(b.start), e1=Number(b.end);
+      const note = (b.note && b.note.trim()) ? b.note.trim() : "請盡量避免排休";
       return `<div class="banner">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 9v4M12 17h.01"/><circle cx="12" cy="12" r="9"/></svg>
-        <span><b>${m2}/${s1}–${m2}/${e1} 人力吃緊</b>${b.reason?`——${b.reason}`:""}。這段期間請盡量避免排休。</span>
+        <span><b>${m2}/${s1}–${m2}/${e1}</b>${b.reason?`　${escapeHtml(b.reason)}`:""}<span class="sep">｜</span><span class="soft">${escapeHtml(note)}</span></span>
       </div>`;
     }).join("");
   } else bb.innerHTML="";
@@ -2654,7 +2660,7 @@ function splitRangeByMonth(startISO,endISO){
 }
 $("#boAdd").onclick=()=>{
   if(ME.perm!=="full") return;
-  $("#boStart").value=""; $("#boEnd").value=""; $("#boReason").value="";
+  $("#boStart").value=""; $("#boEnd").value=""; $("#boReason").value=""; $("#boNote").value="";
   $("#boMask").classList.remove("hide");
 };
 $("#boCancel").onclick=()=>$("#boMask").classList.add("hide");
@@ -2664,10 +2670,11 @@ $("#boSave").onclick=async()=>{
   if(!s||!e){ toast("請選開始日跟結束日"); return; }
   if(s>e){ toast("開始日不能晚於結束日"); return; }
   const reason=$("#boReason").value.trim()||"人力吃緊";
+  const note=$("#boNote").value.trim();
   const segs=splitRangeByMonth(s,e);
   const idBase="b"+Date.now().toString(36);
   await Promise.all(segs.map((seg,i)=>
-    set(ref(db,`${ROOT}/months/${seg.mk}/blackouts/${idBase}${i}`), {start:seg.start, end:seg.end, reason})
+    set(ref(db,`${ROOT}/months/${seg.mk}/blackouts/${idBase}${i}`), {start:seg.start, end:seg.end, reason, ...(note?{note}:{})})
   ));
   $("#boMask").classList.add("hide");
   toast("已新增");

@@ -1294,7 +1294,7 @@ function tryLogin(){
   if(!SEL_UID || PIN.length!==4) return;
   const want = (AUTH[SEL_UID] && AUTH[SEL_UID].pin) || DEFAULT_PIN;
   if(String(want)!==PIN){
-    $("#loginErr").textContent="PIN 不正確";
+    $("#loginErr").textContent="密碼不正確";
     const row=$("#pinRow");
     row.classList.add("shake");
     setTimeout(()=>{ row.classList.remove("shake"); clearPin(); $$("#pinRow input")[0].focus(); }, 360);
@@ -2496,6 +2496,22 @@ $("#crDelete").onclick=async()=>{
 };
 
 /* ============ DAY MODAL ============ */
+function renderDPeers(){
+  const others = mustRank(DAY).filter(r=>r.uid!==ME.uid);
+  if(!others.length){ $("#dPeers").innerHTML = ""; return; }
+  const confirmedCount = others.filter(r=>!isWaitlist(r.uid,DAY)).length;
+  const full = confirmedCount>=MAX_MUST_PER_DAY;
+  const chips = others.map((r,i)=>{
+    const wl = isWaitlist(r.uid,DAY);
+    return `<span class="peerchip${wl?" wait":""}"><span class="rank">${i+1}</span>${escapeHtml(STAFF[r.uid].name)}${wl?"（候補）":""}</span>`;
+  });
+  // 只有在「目前正在選必休、還沒儲存、月曆也還沒鎖定」時，才即時預覽你會排第幾順位／要不要候補
+  const previewingMust = MDATA.status!=="locked" && DRAFT && DRAFT.state==="must" && !DRAFT._origMustTs;
+  if(previewingMust && others.length>=MAX_MUST_PER_DAY){
+    chips.push(`<span class="peerchip wait"><span class="rank">${others.length+1}</span>你（候補）</span>`);
+  }
+  $("#dPeers").innerHTML = `<div class="peerbox"><div class="hd"><span class="lbl">目前已排休</span><span class="badge ${full?"full":"open"}">${confirmedCount}/${MAX_MUST_PER_DAY}${full?" 已額滿":""}</span></div><div class="chips">${chips.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
+}
 function openDay(d){
   const [y,m]=MONTH.split("-").map(Number);
   DAY=pad(d);
@@ -2511,22 +2527,6 @@ function openDay(d){
 
   const hc=holidayMustCount(ME.uid);
   const blocked = hol && hc>=MAX_HOLIDAY_MUST && (!cur || cur.state!=="must");
-  const others = mustRank(DAY).filter(r=>r.uid!==ME.uid);
-  const alreadyMust = cur && cur.state==="must";
-  if(others.length){
-    const confirmedCount = others.filter(r=>!isWaitlist(r.uid,DAY)).length;
-    const full = confirmedCount>=MAX_MUST_PER_DAY;
-    const chips = others.map((r,i)=>{
-      const wl = isWaitlist(r.uid,DAY);
-      return `<span class="peerchip${wl?" wait":""}"><span class="rank">${i+1}</span>${escapeHtml(STAFF[r.uid].name)}${wl?"（候補）":""}</span>`;
-    });
-    if(!alreadyMust && others.length>=MAX_MUST_PER_DAY){
-      chips.push(`<span class="peerchip wait"><span class="rank">${others.length+1}</span>你（候補）</span>`);
-    }
-    $("#dPeers").innerHTML = `<div class="peerbox"><div class="hd"><span class="lbl">目前已排休</span><span class="badge ${full?"full":"open"}">${confirmedCount}/${MAX_MUST_PER_DAY}${full?" 已額滿":""}</span></div><div class="chips">${chips.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
-  } else {
-    $("#dPeers").innerHTML = "";
-  }
   const bo = blackoutOn(d);
   if(bo){
     const boNote = (bo.note && bo.note.trim()) ? bo.note.trim() : "請盡量避免排休";
@@ -2554,6 +2554,7 @@ function openDay(d){
   $("#dayMask").classList.remove("hide");
 }
 function syncModal(){
+  renderDPeers();
   const locked = MDATA.status==="locked";
   if(DRAFT.fromWeekly){
     $$("#dSeg button").forEach(b=>{ b.classList.remove("on"); b.disabled=true; });

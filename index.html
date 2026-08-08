@@ -167,6 +167,7 @@ input,select{font-family:inherit;font-size:15px}
 
 /* month head */
 .mhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:8px;flex-wrap:wrap}
+.mhead .chip{margin-left:auto}
 .mhead .m{display:flex;align-items:center;gap:8px}
 .mhead .m b{font-size:17px;font-weight:500}
 .nav{width:30px;height:30px;border-radius:8px;border:1px solid var(--line);background:var(--surface);
@@ -1531,9 +1532,9 @@ function renderEmp(){
   const [dy,dm]=dueM.split("-").map(Number);
   const left=Math.ceil((new Date(dy,dm-1,DUE_DAY)-new Date())/86400000);
   const chip=$("#eDue");
-  if(locked)                 chip.innerHTML=`<span class="chip d">已截止</span>`;
-  else if(left>=0&&left<=7)  chip.innerHTML=`<span class="chip w">距截止 <span class="num">${left}</span> 天</span>`;
-  else                       chip.innerHTML=`<span class="chip l">${dm}/${DUE_DAY} 截止</span>`;
+  if(locked){ chip.className="chip d"; chip.innerHTML="已截止"; }
+  else if(left>=0&&left<=7){ chip.className="chip w"; chip.innerHTML=`距截止 <span class="num">${left}</span> 天`; }
+  else { chip.className="chip l"; chip.innerHTML=`${dm}/${DUE_DAY} 截止`; }
 
   const dueBanner=$("#eDueBanner");
   if(!locked && !isNaN(left) && left<=3){

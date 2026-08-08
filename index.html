@@ -1207,14 +1207,13 @@ function updateStAnnInfo(){
   const adjust = parseInt($("#stAnnTotal").value,10)||0;
   if(!hireDate){ $("#stAnnInfo").textContent = "請先填到職日"; return; }
   const base = statutoryAnnualDays(hireDate);
-  const total = base+adjust;
   const baseLine = adjust
-    ? `法定 ${base} 天${adjust>0?"+":""}${adjust} 天調整＝共 ${total} 天`
-    : `法定特休 ${total} 天（依到職日自動算）`;
+    ? `法定 ${base} 天${adjust>0?"+":""}${adjust} 天調整（不含遞延）`
+    : `法定特休 ${base} 天（依到職日自動算，不含遞延）`;
   if(STAFF_EDIT_ANN_USED===null){
     $("#stAnnInfo").textContent = `${baseLine}・已用 — 天`;
   } else {
-    $("#stAnnInfo").textContent = `${baseLine}・已用 ${STAFF_EDIT_ANN_USED} 天・剩 ${total-STAFF_EDIT_ANN_USED} 天`;
+    $("#stAnnInfo").textContent = `${baseLine}・已用 ${STAFF_EDIT_ANN_USED} 天（含遞延後的準確剩餘天數請看員工自己月曆上顯示的）`;
   }
 }
 
@@ -1463,7 +1462,17 @@ const monthDays = k=>{const [y,m]=k.split("-").map(Number); return new Date(y,m,
 const firstDow  = k=>{const [y,m]=k.split("-").map(Number); return (new Date(y,m-1,1).getDay()+6)%7;};  // 週一為首
 const reqOf = uid => (MDATA.requests && MDATA.requests[uid]) || {};
 const myReq = () => reqOf(ME.uid);
-// 依到職日算法定特休天數（勞基法第38條天數表）
+// 依到職日算法定特休天數（勞基法第38條天數表）——輸入年資月數，回傳當時級距的天數
+function daysForTenureMonths(totalMonths){
+  if(totalMonths<6)   return 0;
+  if(totalMonths<12)  return 3;
+  if(totalMonths<24)  return 7;
+  if(totalMonths<36)  return 10;
+  if(totalMonths<60)  return 14;
+  if(totalMonths<120) return 15;
+  const years=Math.floor(totalMonths/12);
+  return Math.min(30, 15+(years-10));
+}
 function statutoryAnnualDays(hireDateISO, asOfISO){
   if(!hireDateISO) return 0;
   const hire=new Date(hireDateISO+"T00:00:00");
@@ -1473,30 +1482,60 @@ function statutoryAnnualDays(hireDateISO, asOfISO){
   let months=asOf.getMonth()-hire.getMonth();
   if(asOf.getDate()<hire.getDate()) months--;
   if(months<0){ years--; months+=12; }
+  return daysForTenureMonths(years*12+months);
+}
+function addMonthsISO(dateISO, n){
+  const d=new Date(dateISO+"T00:00:00");
+  d.setMonth(d.getMonth()+n);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function addDaysISO(dateISO, n){
+  const d=new Date(dateISO+"T00:00:00");
+  d.setDate(d.getDate()+n);
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+// 找出 asOf 當下所在的「服務年度」級距區間，以及前一個級距（用來算遞延）
+// 級距邊界（到職起算月數）：6, 12, 24, 36... 滿一年後每 12 個月一段
+function annualPeriodInfo(hireDateISO, asOfISO){
+  if(!hireDateISO) return null;
+  const hire=new Date(hireDateISO+"T00:00:00");
+  const asOf=asOfISO?new Date(asOfISO+"T00:00:00"):new Date();
+  if(isNaN(hire.getTime())||asOf<hire) return null;
+  let years=asOf.getFullYear()-hire.getFullYear();
+  let months=asOf.getMonth()-hire.getMonth();
+  if(asOf.getDate()<hire.getDate()) months--;
+  if(months<0){ years--; months+=12; }
   const totalMonths=years*12+months;
-  if(totalMonths<6)  return 0;
-  if(totalMonths<12) return 3;
-  if(totalMonths<24) return 7;
-  if(totalMonths<36) return 10;
-  if(totalMonths<60) return 14;
-  if(totalMonths<120) return 15;
-  return Math.min(30, 15+(years-10));
+  if(totalMonths<6) return null;
+  const bounds = totalMonths<12 ? [6,12] : (()=>{ const idx=Math.floor((totalMonths-12)/12); const s=12+idx*12; return [s,s+12]; })();
+  const cur = { start:addMonthsISO(hireDateISO,bounds[0]), end:addMonthsISO(hireDateISO,bounds[1]), days:daysForTenureMonths(bounds[0]) };
+  let prev=null;
+  if(bounds[0]>0){
+    const prevBounds = bounds[0]===6 ? null : (bounds[0]===12 ? [6,12] : [bounds[0]-12,bounds[0]]);
+    if(prevBounds) prev = { start:addMonthsISO(hireDateISO,prevBounds[0]), end:addMonthsISO(hireDateISO,prevBounds[1]), days:daysForTenureMonths(prevBounds[0]) };
+  }
+  return { curStart:cur.start, curEnd:cur.end, curDays:cur.days, prev };
 }
-// 總特休天數＝到職日算出的法定天數＋人事資料裡的加減調整
-function annualTotalFor(uid, asOfISO){
-  const hireDate=(SETTINGS[uid]&&SETTINGS[uid].hireDate)||"";
-  const base=statutoryAnnualDays(hireDate, asOfISO);
-  const adjust=Number((ANNUAL[uid]&&ANNUAL[uid].adjust)||0);
-  return base+adjust;
-}
-// 精準版：剩餘天數＝本年總天數－全年月曆裡實際已標記「特休」的天數（不再看人事資料裡手動填的已使用天數，已改成系統自動判斷）
-async function annualCalendarUsed(uid, excludeMonthDay){
-  const months = Array.from({length:12},(_,i)=>`${YEAR}-${pad(i+1)}`);
-  const snaps = await Promise.all(months.map(mk=>get(ref(db,`${ROOT}/months/${mk}/requests/${uid}`))));
+// 算某段期間［startISO, endISO）實際被標記「特休」的天數
+async function annualCalendarUsedRange(uid, startISO, endISO, excludeMonthDay){
+  const lastDay=addDaysISO(endISO,-1);
+  const months=new Set();
+  let cur=startISO.slice(0,7);
+  const lastMk=lastDay.slice(0,7);
+  while(cur<=lastMk){
+    months.add(cur);
+    const [yy,mm]=cur.split("-").map(Number);
+    const nd=new Date(yy,mm,1);
+    cur=`${nd.getFullYear()}-${pad(nd.getMonth()+1)}`;
+  }
+  const mks=[...months];
+  const snaps=await Promise.all(mks.map(mk=>get(ref(db,`${ROOT}/months/${mk}/requests/${uid}`))));
   let cal=0;
-  months.forEach((mk,idx)=>{
-    const days=(snaps[idx] && snaps[idx].val())||{};
+  mks.forEach((mk,idx)=>{
+    const days=(snaps[idx]&&snaps[idx].val())||{};
     Object.entries(days).forEach(([dd,r])=>{
+      const dateISO=`${mk}-${dd}`;
+      if(dateISO<startISO || dateISO>lastDay) return;
       const key=`${mk}-${dd}`;
       if(excludeMonthDay && key===excludeMonthDay) return;
       if(r && r.state==="must" && r.pool==="annual") cal++;
@@ -1504,19 +1543,38 @@ async function annualCalendarUsed(uid, excludeMonthDay){
   });
   return cal;
 }
-// asOfISO：法定天數要「算到哪一天」——通常傳該月最後一天，這樣只要在該月內滿足年資門檻就會顯示
+// 總特休天數＝到職日算出的法定天數＋前一段沒用完遞延過來的天數＋人事資料裡的加減調整
+// asOfISO：算到哪一天（通常傳該月最後一天／該天本身）
+async function annualTotalFor(uid, asOfISO){
+  const hireDate=(SETTINGS[uid]&&SETTINGS[uid].hireDate)||"";
+  const adjust=Number((ANNUAL[uid]&&ANNUAL[uid].adjust)||0);
+  const info=annualPeriodInfo(hireDate, asOfISO);
+  if(!info) return Math.max(0, adjust);
+  let carry=0;
+  if(info.prev){
+    const prevUsed=await annualCalendarUsedRange(uid, info.prev.start, info.prev.end);
+    carry=Math.max(0, info.prev.days-prevUsed);
+  }
+  return info.curDays+carry+adjust;
+}
+// 精準版：剩餘天數＝總天數－這個服務年度裡實際已標記「特休」的天數（跟總天數用同一段期間，帳才對得起來）
 async function annualLeftAccurate(uid, excludeMonthDay, asOfISO){
+  const hireDate=(SETTINGS[uid]&&SETTINGS[uid].hireDate)||"";
   const a=ANNUAL[uid]||{};
-  const cal=await annualCalendarUsed(uid, excludeMonthDay);
-  return annualTotalFor(uid, asOfISO) - (Number(a.used)||0) - cal;
+  const info=annualPeriodInfo(hireDate, asOfISO);
+  const total=await annualTotalFor(uid, asOfISO);
+  if(!info) return total-(Number(a.used)||0);
+  const used=await annualCalendarUsedRange(uid, info.curStart, info.curEnd, excludeMonthDay);
+  return total-(Number(a.used)||0)-used;
 }
 let ANNUAL_LINE_TOKEN=0;
 async function refreshAnnualLine(){
   const monthEndISO = `${MONTH}-${pad(monthDays(MONTH))}`;
-  const total=annualTotalFor(ME.uid, monthEndISO);
   const sep=$("#annualSep"), chip=$("#annualChipText");
-  if(total<=0){ sep.classList.add("hide"); chip.classList.add("hide"); return; }
   const token=++ANNUAL_LINE_TOKEN;
+  const total=await annualTotalFor(ME.uid, monthEndISO);
+  if(token!==ANNUAL_LINE_TOKEN) return;
+  if(total<=0){ sep.classList.add("hide"); chip.classList.add("hide"); return; }
   const left=await annualLeftAccurate(ME.uid, null, monthEndISO);
   if(token!==ANNUAL_LINE_TOKEN) return; // 期間又切月份了，這次結果不套用
   sep.classList.remove("hide"); chip.classList.remove("hide");
@@ -2025,10 +2083,14 @@ function renderStaff(){
       </div>`;
     row.innerHTML=`<img src="${avatarOf(s.animal)}" alt="">
       <div class="info"><div class="n">${s.name}${s.active===false?"（停用）":""}${p!=="self"?` <span style="color:var(--ok);font-weight:400">· ${PERM_LABEL[p]}</span>`:""}</div>
-      <div class="d">${s.role} · ${full?dt:`<span style="color:var(--warn)">只上${dt}</span>`} · ${win}${wa?` · 每週${wa}許願休假`:""} · 特休 <span id="annRow-${uid}">…</span>/${annualTotalFor(uid)}</div></div>
+      <div class="d">${s.role} · ${full?dt:`<span style="color:var(--warn)">只上${dt}</span>`} · ${win}${wa?` · 每週${wa}許願休假`:""} · 特休 <span id="annRow-${uid}">…</span>/<span id="annTotRow-${uid}">…</span></div></div>
       ${reorderHtml}
       <span style="color:var(--ink3);font-size:11px">編輯</span>`;
     row.onclick=()=>openStaff(uid);
+    annualTotalFor(uid).then(total=>{
+      const el1=document.getElementById(`annTotRow-${uid}`);
+      if(el1) el1.textContent=total;
+    });
     annualLeftAccurate(uid).then(left=>{
       const el2=document.getElementById(`annRow-${uid}`);
       if(el2) el2.textContent=left;
@@ -2105,13 +2167,16 @@ function openStaff(uid){
   $("#stAnnTotal").value = an.adjust||0;
   $("#stAnnInfo").textContent = st.hireDate ? "已用 — 天・剩 — 天" : "請先填到職日";
   STAFF_EDIT_ANN_USED = null;
-  if(uid){
-    annualCalendarUsed(uid).then(used=>{
-      if(EDIT_UID!==uid) return; // 期間切換到別人了，結果不套用
-      STAFF_EDIT_ANN_USED = used;
-      updateStAnnInfo();
-    });
-  } else {
+  if(uid && st.hireDate){
+    const info=annualPeriodInfo(st.hireDate);
+    if(info){
+      annualCalendarUsedRange(uid, info.curStart, info.curEnd).then(used=>{
+        if(EDIT_UID!==uid) return; // 期間切換到別人了，結果不套用
+        STAFF_EDIT_ANN_USED = used;
+        updateStAnnInfo();
+      });
+    }
+  } else if(!uid){
     $("#stAnnInfo").textContent = "新增員工後，填到職日就會自動算特休天數";
   }
   $("#stPin").value = (uid && AUTH[uid] && AUTH[uid].pin) || DEFAULT_PIN;

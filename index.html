@@ -892,7 +892,6 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <label><div class="lab">最早幾點到</div><input type="time" id="dStart" value="06:00"></label>
         <label><div class="lab">最晚到幾點</div><input type="time" id="dEnd" value="10:00"></label>
       </div>
-      <div class="mnote">可上的班別會依這個時間自動判斷（全 5:30–14:30 / 早 6:00–10:00 / 午 10:00–14:30）。</div>
     </div>
     <div id="dExtraWrap" class="detailcard hide">
       <div class="dlbl"><span class="dot"></span>比平常多出來的時段</div>
@@ -900,7 +899,6 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         <label><div class="lab">最早可以幾點到</div><input type="time" id="dExStart" value="06:00"></label>
         <label><div class="lab">最晚可以待到幾點</div><input type="time" id="dExEnd" value="10:00"></label>
       </div>
-      <div class="mnote" id="dExtraNote">這天比平常多出來的時段，讓老闆娘知道可以怎麼加開班。</div>
     </div>
     <div class="hr"></div>
     <div class="mfoot">
@@ -2531,7 +2529,7 @@ function openDay(d){
   const bo = blackoutOn(d);
   if(bo){
     const boNote = (bo.note && bo.note.trim()) ? bo.note.trim() : "請盡量避免排休";
-    $("#dWarn").innerHTML=`<div class="warnbox bo">這段期間${bo.reason?`（${bo.reason}）`:""}，${boNote}。</div>`;
+    $("#dWarn").innerHTML=`<div class="warnbox bo">這段期間${bo.reason?bo.reason:""}，${boNote}。</div>`;
   } else if(blocked){
     $("#dWarn").innerHTML=`<div class="warnbox">你這個月的假日必休已達 ${MAX_HOLIDAY_MUST} 天上限，這天無法再指定必休。可改選「提早閃人」或「許願休假」。</div>`;
   } else {
@@ -2550,11 +2548,6 @@ function openDay(d){
   if(off && DRAFT.state && DRAFT.state!=="extra") DRAFT.state=null;
   $("#dOffNote").classList.toggle("hide", !off);
   if(off) $("#dOffNote").innerHTML=`<div class="warnbox">你這天本來不排班。如果剛好有空、可以來支援，請點下方「可增班」回報。</div>`;
-
-  const win=windowFor(ME.uid, hol);
-  $("#dExtraNote").textContent = (!off && win && win.start && win.end)
-    ? `平常固定 ${win.start}–${win.end}，這天可以多上到什麼時候？`
-    : "這天比平常多出來的時段，讓老闆娘知道可以怎麼加開班。";
 
   syncModal();
   $("#dayMask").classList.remove("hide");

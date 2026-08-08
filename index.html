@@ -656,7 +656,15 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div class="wk"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
       <div class="cal" id="eCal"></div>
     </div>
-    <div class="cap">點任一天即可設定，確定就會直接送出。必休每天最多 2 人，依回報時間先後排序，額滿會排候補（格子右上小點）。日期數字下方的小圓點代表同事已排必休的人數（最多疊 3 顆），點進當天可以看到完整排隊順序。</div>
+    <div class="cap">點任一天即可設定，確定就會直接送出</div>
+    <button class="moretoggle" id="calRuleToggle" type="button" style="margin-top:6px">
+      <span>規則說明</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </button>
+    <div class="cap hide" id="calRuleDetail" style="margin-top:8px">
+      必休每天最多 2 人，依回報時間排序，額滿排候補<br>
+      日期下方小圓點為已排必休人數，點開可看順序
+    </div>
 
     <div class="card" style="margin-top:12px">
       <div class="sechd"><h2>本月備註</h2></div>
@@ -2668,6 +2676,7 @@ $("#oQuotaSave").onclick=async()=>{
   toast("已儲存應休天數");
 };
 
+wireHistToggle("calRuleToggle","calRuleDetail");
 boot().catch(e=>{
   console.error(e);
   const msg = String(e && (e.code || e.message) || e);

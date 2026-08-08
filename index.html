@@ -2497,19 +2497,23 @@ $("#crDelete").onclick=async()=>{
 
 /* ============ DAY MODAL ============ */
 function renderDPeers(){
-  const others = mustRank(DAY).filter(r=>r.uid!==ME.uid);
-  if(!others.length){ $("#dPeers").innerHTML = ""; return; }
-  const confirmedCount = others.filter(r=>!isWaitlist(r.uid,DAY)).length;
+  const locked = MDATA.status==="locked";
+  const saved = mustRank(DAY); // 已儲存的必休名單，若你自己已排也會在裡面
+  const selfSaved = saved.some(r=>r.uid===ME.uid);
+  // 只有在「目前正在選必休、還沒儲存、月曆也還沒鎖定」時，才即時把你加進預覽名單
+  const previewingMust = !locked && DRAFT && DRAFT.state==="must" && !selfSaved;
+  const list = previewingMust ? saved.concat([{uid:ME.uid, ts:Date.now(), fixed:false, _preview:true}]) : saved;
+  if(!list.length){ $("#dPeers").innerHTML = ""; return; }
+  const confirmedReal = saved.filter(r=>!isWaitlist(r.uid,DAY)).length;
+  const previewWaitlisted = previewingMust && confirmedReal>=MAX_MUST_PER_DAY;
+  const confirmedCount = confirmedReal + (previewingMust && !previewWaitlisted ? 1 : 0);
   const full = confirmedCount>=MAX_MUST_PER_DAY;
-  const chips = others.map((r,i)=>{
-    const wl = isWaitlist(r.uid,DAY);
-    return `<span class="peerchip${wl?" wait":""}"><span class="rank">${i+1}</span>${escapeHtml(STAFF[r.uid].name)}${wl?"（候補）":""}</span>`;
+  const chips = list.map((r,i)=>{
+    const isSelf = r.uid===ME.uid;
+    const wl = r._preview ? previewWaitlisted : isWaitlist(r.uid,DAY);
+    const name = isSelf ? "你" : escapeHtml(STAFF[r.uid].name);
+    return `<span class="peerchip${wl?" wait":""}"><span class="rank">${i+1}</span>${name}${wl?"（候補）":""}</span>`;
   });
-  // 只有在「目前正在選必休、還沒儲存、月曆也還沒鎖定」時，才即時預覽你會排第幾順位／要不要候補
-  const previewingMust = MDATA.status!=="locked" && DRAFT && DRAFT.state==="must" && !DRAFT._origMustTs;
-  if(previewingMust && others.length>=MAX_MUST_PER_DAY){
-    chips.push(`<span class="peerchip wait"><span class="rank">${others.length+1}</span>你（候補）</span>`);
-  }
   $("#dPeers").innerHTML = `<div class="peerbox"><div class="hd"><span class="lbl">目前已排休</span><span class="badge ${full?"full":"open"}">${confirmedCount}/${MAX_MUST_PER_DAY}${full?" 已額滿":""}</span></div><div class="chips">${chips.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
 }
 function openDay(d){

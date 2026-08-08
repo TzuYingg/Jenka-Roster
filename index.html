@@ -390,13 +390,13 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .pstat.doing{color:#7a5a20}
 .pstat.done{color:#3f5e47}
 
-/* 月曆卡片頂端：已設定天數／假日必休；固定單行，太擠時文字省略號截斷，截止日＋圖例永遠完整顯示在右邊 */
-.topLine{display:flex;align-items:center;gap:8px;
+/* 月曆卡片頂端：已設定天數／假日必休（左，單行完整顯示）；截止日／圖例直向堆疊在右邊，縮小佔用的橫向寬度 */
+.topLine{display:flex;align-items:flex-start;gap:8px;
   font-size:11.5px;color:var(--ink3);margin-bottom:11px}
 .topLine .sep{color:var(--line)}
 .topLine b{color:var(--ink2)}
-.topLineText{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
-.topLineRight{display:flex;align-items:center;gap:8px;flex:none}
+.topLineText{flex:1;min-width:0;line-height:1.6}
+.topLineRight{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none}
 .legendBtn{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--ink3);
   border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex:none;white-space:nowrap}
 .legendBtn svg{width:11px;height:11px}
@@ -1574,10 +1574,6 @@ function renderEmp(){
   $("#eHolCnt").textContent=`${hc} / ${MAX_HOLIDAY_MUST}`;
   $("#eHolLeft").textContent = hc>=MAX_HOLIDAY_MUST ? "· 已達上限" : `· 最多指定 ${MAX_HOLIDAY_MUST-hc} 天`;
   $("#eCnt").textContent = Object.keys(mine).length;
-  const topLineTextEl = $("#topLineText");
-  const fullTopLineText = topLineTextEl.textContent.replace(/\s+/g," ").trim();
-  topLineTextEl.title = fullTopLineText;
-  topLineTextEl.onclick = () => toast(fullTopLineText);
 
   const cal=$("#eCal"); cal.innerHTML="";
   for(let i=0;i<start;i++){

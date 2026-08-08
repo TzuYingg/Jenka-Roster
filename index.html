@@ -1601,8 +1601,9 @@ function renderEmp(){
     if(!closed && blackoutOn(d)) c.classList.add("bo");
     const peerDots = peerN ? `<span class="peers">${"<span></span>".repeat(Math.min(peerN,3))}</span>` : "";
     c.innerHTML=`<span class="d">${d}</span>${peerDots}${tag?`<span class="t">${tag}</span>`:""}`;
-    if(!locked && !closed && !selfDone) c.onclick=()=>openDay(d);
-    else if(!locked && !closed && selfDone) c.onclick=()=>toast("已完成本月排休，如需修改請先點「取消完成」");
+    if(!closed && locked) c.onclick=()=>openDay(d);
+    else if(!closed && !selfDone) c.onclick=()=>openDay(d);
+    else if(!closed && selfDone) c.onclick=()=>toast("已完成本月排休，如需修改請先點「取消完成」");
     cal.appendChild(c);
   }
   renderClMine();
@@ -2506,7 +2507,7 @@ function openDay(d){
   $("#dTitle").innerHTML=`<span class="num">${m}/${d}</span>`;
   $("#dSub").textContent=`星期${"日一二三四五六"[dowOf(y,m,d)]} · ${hol?"假日":"平日"}`;
   $("#dAnnLeft").textContent=`剩 ${annualLeft(ME.uid)} 天`;
-  $("#dClear").classList.toggle("hide", !cur || !!(cur && cur.fromWeekly));
+  $("#dClear").classList.toggle("hide", !cur || !!(cur && cur.fromWeekly) || MDATA.status==="locked");
 
   const hc=holidayMustCount(ME.uid);
   const blocked = hol && hc>=MAX_HOLIDAY_MUST && (!cur || cur.state!=="must");
@@ -2553,6 +2554,7 @@ function openDay(d){
   $("#dayMask").classList.remove("hide");
 }
 function syncModal(){
+  const locked = MDATA.status==="locked";
   if(DRAFT.fromWeekly){
     $$("#dSeg button").forEach(b=>{ b.classList.remove("on"); b.disabled=true; });
     $("#dApply").innerHTML = `<div class="warnbox">這天是每週固定必休，如需異動請直接找老闆娘調整員工設定。</div>`;
@@ -2561,8 +2563,32 @@ function syncModal(){
     $("#dExtraWrap").classList.add("hide");
     $("#dSave").disabled = true;
     $("#dSave").textContent = "已鎖定";
+    $("#dCancel").textContent = "關閉";
     return;
   }
+  if(locked){
+    $$("#dSeg button").forEach(b=>{ b.classList.toggle("on", b.dataset.s===DRAFT.state); b.disabled=true; });
+    $("#dApply").innerHTML = `<div class="warnbox">本月已鎖定，僅供查看，如需修改請找老闆娘。</div>`;
+    $$("#dPool button").forEach(b=>{ b.classList.toggle("on", b.dataset.p===DRAFT.pool); b.disabled=true; });
+    $("#dPoolWrap").classList.toggle("hide", DRAFT.state!=="must" || ME.role==="工讀");
+    $("#dTimeWrap").classList.toggle("hide", DRAFT.state!=="limited");
+    $("#dExtraWrap").classList.toggle("hide", DRAFT.state!=="extra");
+    if(DRAFT.state==="limited"){
+      $("#dStart").value=(DRAFT.window&&DRAFT.window.start)||"06:00";
+      $("#dEnd").value  =(DRAFT.window&&DRAFT.window.end)||"10:00";
+    }
+    if(DRAFT.state==="extra"){
+      $("#dExStart").value=(DRAFT.window&&DRAFT.window.start)||"06:00";
+      $("#dExEnd").value  =(DRAFT.window&&DRAFT.window.end)||"10:00";
+    }
+    $("#dStart").disabled = true; $("#dEnd").disabled = true;
+    $("#dExStart").disabled = true; $("#dExEnd").disabled = true;
+    $("#dSave").disabled = true;
+    $("#dSave").textContent = "已鎖定";
+    $("#dCancel").textContent = "關閉";
+    return;
+  }
+  $("#dCancel").textContent = "取消";
   $$("#dSeg button").forEach(b=>b.classList.toggle("on", b.dataset.s===DRAFT.state));
   // 選了「必休」才判斷是否需要走申請
   const napp = (DRAFT.state==="must" && DAY) ? needsApplication(ME.uid, DAY) : null;
@@ -2607,10 +2633,12 @@ $$("#dSeg button").forEach(b=> b.onclick=()=>{ if(b.disabled||b.classList.contai
 $$("#dPool button").forEach(b=> b.onclick=()=>{ if(b.disabled) return; DRAFT.pool=b.dataset.p; syncModal(); });
 $("#dCancel").onclick=()=>$("#dayMask").classList.add("hide");
 $("#dClear").onclick=async()=>{
+  if(MDATA.status==="locked") return;
   await remove(ref(db,`${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`));
   $("#dayMask").classList.add("hide"); toast("已清除");
 };
 $("#dSave").onclick=async()=>{
+  if(MDATA.status==="locked") return;
   if(!DRAFT.state) return;
   const payload={state:DRAFT.state};
   payload.ts = (DRAFT.state==="must" && DRAFT._origMustTs) ? DRAFT._origMustTs : serverTimestamp();

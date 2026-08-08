@@ -497,6 +497,15 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   font-size:10px;line-height:1;font-weight:500;min-width:15px;height:15px;border-radius:999px;
   align-items:center;justify-content:center;padding:0 3px}
 .subtabs .badge.show{display:flex}
+/* 月曆下方規則說明（圖示三行） */
+.ruleRows{display:flex;flex-direction:column;gap:7px;margin-top:9px}
+.ruleRows .row{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink2);line-height:1.5}
+.ruleRows .ic{flex:none;width:16px;height:16px;display:flex;align-items:center;justify-content:center}
+.ruleRows .ic svg{width:14px;height:14px;stroke:var(--ink3)}
+.ruleRows .dotmark{width:16px;height:16px;flex:none;display:flex;align-items:center;justify-content:center}
+.ruleRows .dotmark::after{content:"";width:11px;height:11px;border-radius:4px;background:var(--clay)}
+.ruleRows .stackdots{width:16px;height:16px;flex:none;display:flex;align-items:center;justify-content:center;gap:2px}
+.ruleRows .stackdots i{width:5px;height:5px;border-radius:50%;background:var(--ink3);display:block}
 /* 顯示更多 / 過去紀錄（人力吃緊期、店休設定共用） */
 .moretoggle{width:100%;display:flex;align-items:center;justify-content:space-between;
   padding:9px 12px;border-radius:10px;border:1px dashed var(--line);background:none;
@@ -656,14 +665,19 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       <div class="wk"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
       <div class="cal" id="eCal"></div>
     </div>
-    <div class="cap">點任一天即可設定，確定就會直接送出</div>
-    <button class="moretoggle" id="calRuleToggle" type="button" style="margin-top:6px">
-      <span>規則說明</span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
-    </button>
-    <div class="cap hide" id="calRuleDetail" style="margin-top:8px">
-      必休每天最多 2 人，依回報時間排序，額滿排候補<br>
-      日期下方小圓點為已排必休人數，點開可看順序
+    <div class="ruleRows">
+      <div class="row">
+        <span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></span>
+        <div>點任一天即可設定，確定就會直接送出</div>
+      </div>
+      <div class="row">
+        <span class="dotmark"></span>
+        <div>必休每天最多 2 人，依回報時間排序，額滿排候補</div>
+      </div>
+      <div class="row">
+        <span class="stackdots"><i></i><i></i><i></i></span>
+        <div>日期下方小圓點為已排必休人數，點開可看順序</div>
+      </div>
     </div>
 
     <div class="card" style="margin-top:12px">
@@ -2676,7 +2690,6 @@ $("#oQuotaSave").onclick=async()=>{
   toast("已儲存應休天數");
 };
 
-wireHistToggle("calRuleToggle","calRuleDetail");
 boot().catch(e=>{
   console.error(e);
   const msg = String(e && (e.code || e.message) || e);

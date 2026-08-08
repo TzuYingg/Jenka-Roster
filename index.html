@@ -2805,7 +2805,17 @@ function syncModal(){
     return;
   }
   $("#dCancel").textContent = "取消";
-  $$("#dSeg button").forEach(b=>b.classList.toggle("on", b.dataset.s===DRAFT.state));
+  {
+    const [ny,nm]=MONTH.split("-").map(Number);
+    const nhol=isHol(ny,nm,Number(DAY));
+    const nhc=holidayMustCount(ME.uid);
+    const ncur=myReq()[DAY];
+    const nblocked = nhol && nhc>=MAX_HOLIDAY_MUST && (!ncur || ncur.state!=="must");
+    $$("#dSeg button").forEach(b=>{
+      b.classList.toggle("on", b.dataset.s===DRAFT.state);
+      b.disabled = (b.dataset.s==="must") ? nblocked : false;
+    });
+  }
   // 選了「必休」才判斷是否需要走申請
   const napp = (DRAFT.state==="must" && DAY) ? needsApplication(ME.uid, DAY) : null;
   const box=$("#dApply");
@@ -2826,11 +2836,15 @@ function syncModal(){
     if(b.dataset.p==="annual"){
       const noBalance = CUR_ANN_LEFT===null || CUR_ANN_LEFT<=0;
       b.disabled = noBalance && DRAFT.pool!=="annual";
+    } else {
+      b.disabled = false;
     }
   });
   $("#dPoolWrap").classList.toggle("hide", DRAFT.state!=="must" || ME.role==="工讀");
   $("#dTimeWrap").classList.toggle("hide", DRAFT.state!=="limited");
   $("#dExtraWrap").classList.toggle("hide", DRAFT.state!=="extra");
+  $("#dStart").disabled=false; $("#dEnd").disabled=false;
+  $("#dExStart").disabled=false; $("#dExEnd").disabled=false;
   if(DRAFT.state==="limited"){
     $("#dStart").value=(DRAFT.window&&DRAFT.window.start)||"06:00";
     $("#dEnd").value  =(DRAFT.window&&DRAFT.window.end)||"10:00";

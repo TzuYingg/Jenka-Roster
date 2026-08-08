@@ -381,13 +381,33 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 .pcol .pstat.none{color:var(--ink3)}
 .pcol .pstat.doing{color:#7a5a20}
 .pcol .pstat.done{color:#3f5e47}
-/* 本月排休已完成按鈕（小按鈕，塞進已設定天數那一行） */
-.donebtn{padding:6px 12px;border-radius:999px;border:1px solid var(--ok);background:var(--ok);
-  color:#fff;font-size:11.5px;font-weight:500;display:flex;align-items:center;
-  gap:5px;white-space:nowrap}
-.donebtn.on{background:var(--surface);border-color:var(--line);color:var(--ink2)}
-.donebtn:disabled{opacity:.4}
-.donebtn svg{width:13px;height:13px}
+/* dot/pstat 通用版（填寫狀態面板用 .pcol 包住，這裡是給月曆卡片頂端的自己狀態列共用同一套顏色） */
+.dot{width:6px;height:6px;border-radius:50%;flex:none;display:inline-block}
+.dot.none{background:var(--ink3)}
+.dot.doing{background:var(--warn)}
+.dot.done{background:var(--ok)}
+.pstat.none{color:var(--ink3)}
+.pstat.doing{color:#7a5a20}
+.pstat.done{color:#3f5e47}
+
+/* 月曆卡片頂端：自己的填寫狀態＋標記完成按鈕 */
+.selfBar{display:flex;align-items:center;gap:8px;position:relative;
+  margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--line)}
+.selfBar .pstat{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);flex:1}
+.selfBar .pstat.hide{display:none}
+.iconDoneBtn{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--ink);
+  background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center}
+.iconDoneBtn.on{background:var(--surface);border-color:var(--line);color:var(--ink2)}
+.iconDoneBtn:disabled{opacity:.35}
+.iconDoneBtn svg{width:13px;height:13px}
+.iconDoneBtn.hide{display:none}
+
+/* 第一次登入的教學氣泡 */
+.coach{position:absolute;top:34px;right:0;background:var(--ink);color:#fff;
+  border-radius:12px;padding:9px 12px;font-size:11px;max-width:190px;line-height:1.5;z-index:5;
+  box-shadow:0 4px 14px rgba(43,40,36,.18)}
+.coach::after{content:"";position:absolute;top:-6px;right:11px;border:6px solid transparent;border-bottom-color:var(--ink)}
+.coach .coachClose{display:block;margin-top:6px;text-align:right;font-size:10.5px;color:#E7E2D8;text-decoration:underline}
 .fgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
 .fgrid.one{grid-template-columns:1fr}
 .fld label{display:block;font-size:11px;color:var(--ink2);margin-bottom:5px}
@@ -603,6 +623,18 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
         </div>
         <span id="eDue"></span>
       </div>
+      <div class="selfBar" id="selfBar">
+        <span class="pstat" id="selfStat"><span class="dot" id="selfDot"></span><span id="selfLabel"></span> · 已設定 <b class="num" id="eCnt">0</b> 天</span>
+        <button class="iconDoneBtn" id="doneToggleBtn" type="button">
+          <svg id="doneIconCheck" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6L9 17l-5-5"/></svg>
+          <svg id="doneIconX" class="hide" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M6 6l12 12M18 6L6 18"/></svg>
+        </button>
+        <div class="coach hide" id="doneCoach">
+          排休填完了嗎？填完後點這裡標記本月已完成
+          <span class="coachClose" id="doneCoachClose">知道了</span>
+        </div>
+      </div>
+      <div class="cap" id="doneToggleNote" style="margin:2px 0 8px"></div>
       <div id="eLocked" class="locked hide"></div>
       <div id="eDueBanner"></div>
       <div id="eBlackout"></div>
@@ -619,14 +651,6 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
       </div>
       <div class="wk"><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div>六</div><div>日</div></div>
       <div class="cal" id="eCal"></div>
-      <div class="foot">
-        <span class="c">已設定 <b class="num" id="eCnt">0</b> 天</span>
-        <button class="donebtn" id="doneToggleBtn" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 6L9 17l-5-5"/></svg>
-          <span id="doneToggleLabel">本月已完成</span>
-        </button>
-      </div>
-      <div class="cap" id="doneToggleNote" style="text-align:center;margin:8px 0 0"></div>
     </div>
     <div class="cap">點任一天即可設定，確定就會直接送出。必休每天最多 2 人，依回報時間先後排序，額滿會排候補（格子右上小點）。日期數字下方的小圓點代表同事已排必休的人數（最多疊 3 顆），點進當天可以看到完整排隊順序。</div>
 
@@ -1455,7 +1479,7 @@ function renderEmp(){
   const selfDone = !!(MDATA.done && MDATA.done[ME.uid]);
   loadAdjMonths();
   renderFillStatus();
-  syncDoneBtn(selfDone, locked);
+  syncDoneBtn(selfDone, locked, Object.keys(mine).length);
 
   const dueM=shiftMonth(MONTH,-1);
   const [dy,dm]=dueM.split("-").map(Number);
@@ -1562,19 +1586,49 @@ function renderFillStatus(){
   const badge=$("#fwBadge");
   if(badge) badge.classList.toggle("done", active.length>0 && doneCount===active.length);
 }
-function syncDoneBtn(selfDone, mLocked){
-  const btn=$("#doneToggleBtn"), label=$("#doneToggleLabel"), note=$("#doneToggleNote");
+function syncDoneBtn(selfDone, mLocked, filledCount){
+  const btn=$("#doneToggleBtn"), dot=$("#selfDot"), label=$("#selfLabel"),
+        stat=$("#selfStat"), note=$("#doneToggleNote"),
+        iconCheck=$("#doneIconCheck"), iconX=$("#doneIconX");
   if(!btn) return;
+  const status = selfDone ? "done" : (filledCount>0 ? "doing" : "none");
+  dot.className = "dot " + status;
+  label.textContent = FILL_LABEL[status];
+  stat.className = "pstat " + status;
   btn.classList.toggle("on", selfDone);
-  label.textContent = selfDone ? "已完成，點此取消" : "本月已完成";
+  btn.classList.toggle("hide", status==="none");
   btn.disabled = mLocked;
+  iconCheck.classList.toggle("hide", selfDone);
+  iconX.classList.toggle("hide", !selfDone);
   note.textContent = mLocked ? "" : (selfDone ? "月曆已鎖定，取消完成後才能繼續修改" : "");
+  if(status!=="none") maybeShowDoneCoach();
 }
 $("#doneToggleBtn").onclick=async()=>{
   if(MDATA.status==="locked") return;
   const cur = !!(MDATA.done && MDATA.done[ME.uid]);
   await set(ref(db,`${ROOT}/months/${MONTH}/done/${ME.uid}`), !cur);
+  dismissDoneCoach();
 };
+/* 標記完成按鈕：第一次登入才出現的教學氣泡，點「知道了」或按過按鈕後就不再出現 */
+function dismissDoneCoach(){
+  try{
+    const coach=$("#doneCoach");
+    if(coach) coach.classList.add("hide");
+    if(ME && ME.uid) localStorage.setItem("jenka_seen_done_coach_"+ME.uid, "1");
+  }catch(e){}
+}
+function maybeShowDoneCoach(){
+  try{
+    if(!ME || !ME.uid) return;
+    if(localStorage.getItem("jenka_seen_done_coach_"+ME.uid)) return;
+    const coach=$("#doneCoach");
+    if(coach) coach.classList.remove("hide");
+  }catch(e){}
+}
+$("#doneCoachClose") && $("#doneCoachClose").addEventListener("click", (e)=>{
+  e.stopPropagation();
+  dismissDoneCoach();
+});
 /* 填寫狀態固定面板：收合／展開 */
 (function(){
   const widget=$("#fillWidget"), tab=$("#fwTab"), scrim=$("#fwScrim");

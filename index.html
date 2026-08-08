@@ -395,12 +395,11 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   margin-bottom:11px;padding-bottom:11px;border-bottom:1px solid var(--line)}
 .selfBar .pstat{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--ink2);flex:1}
 .selfBar .pstat.hide{display:none}
-.iconDoneBtn{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--ink);
-  background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center}
+.iconDoneBtn{flex:none;width:26px;height:26px;border-radius:50%;border:1px solid var(--clay);
+  background:var(--clay);color:#fff;display:flex;align-items:center;justify-content:center}
 .iconDoneBtn.on{background:var(--surface);border-color:var(--line);color:var(--ink2)}
 .iconDoneBtn:disabled{opacity:.35}
 .iconDoneBtn svg{width:13px;height:13px}
-.iconDoneBtn.hide{display:none}
 
 /* 第一次登入的教學氣泡 */
 .coach{position:absolute;top:34px;right:0;background:var(--ink);color:#fff;
@@ -1596,12 +1595,11 @@ function syncDoneBtn(selfDone, mLocked, filledCount){
   label.textContent = FILL_LABEL[status];
   stat.className = "pstat " + status;
   btn.classList.toggle("on", selfDone);
-  btn.classList.toggle("hide", status==="none");
   btn.disabled = mLocked;
   iconCheck.classList.toggle("hide", selfDone);
   iconX.classList.toggle("hide", !selfDone);
   note.textContent = mLocked ? "" : (selfDone ? "月曆已鎖定，取消完成後才能繼續修改" : "");
-  if(status!=="none") maybeShowDoneCoach();
+  maybeShowDoneCoach();
 }
 $("#doneToggleBtn").onclick=async()=>{
   if(MDATA.status==="locked") return;

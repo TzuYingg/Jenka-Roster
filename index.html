@@ -1483,9 +1483,9 @@ function statutoryAnnualDays(hireDateISO, asOfISO){
   return Math.min(30, 15+(years-10));
 }
 // 總特休天數＝到職日算出的法定天數＋人事資料裡的加減調整
-function annualTotalFor(uid){
+function annualTotalFor(uid, asOfISO){
   const hireDate=(SETTINGS[uid]&&SETTINGS[uid].hireDate)||"";
-  const base=statutoryAnnualDays(hireDate);
+  const base=statutoryAnnualDays(hireDate, asOfISO);
   const adjust=Number((ANNUAL[uid]&&ANNUAL[uid].adjust)||0);
   return base+adjust;
 }
@@ -1504,18 +1504,20 @@ async function annualCalendarUsed(uid, excludeMonthDay){
   });
   return cal;
 }
-async function annualLeftAccurate(uid, excludeMonthDay){
+// asOfISO：法定天數要「算到哪一天」——通常傳該月最後一天，這樣只要在該月內滿足年資門檻就會顯示
+async function annualLeftAccurate(uid, excludeMonthDay, asOfISO){
   const a=ANNUAL[uid]||{};
   const cal=await annualCalendarUsed(uid, excludeMonthDay);
-  return annualTotalFor(uid) - (Number(a.used)||0) - cal;
+  return annualTotalFor(uid, asOfISO) - (Number(a.used)||0) - cal;
 }
 let ANNUAL_LINE_TOKEN=0;
 async function refreshAnnualLine(){
-  const total=annualTotalFor(ME.uid);
+  const monthEndISO = `${MONTH}-${pad(monthDays(MONTH))}`;
+  const total=annualTotalFor(ME.uid, monthEndISO);
   const sep=$("#annualSep"), chip=$("#annualChipText");
   if(total<=0){ sep.classList.add("hide"); chip.classList.add("hide"); return; }
   const token=++ANNUAL_LINE_TOKEN;
-  const left=await annualLeftAccurate(ME.uid);
+  const left=await annualLeftAccurate(ME.uid, null, monthEndISO);
   if(token!==ANNUAL_LINE_TOKEN) return; // 期間又切月份了，這次結果不套用
   sep.classList.remove("hide"); chip.classList.remove("hide");
   chip.innerHTML = `特休剩 <b class="num">${left}</b>／${total} 天`;
@@ -1849,7 +1851,7 @@ function renderOwner(){
          <span class="qm">必休 <span class="num">${off}${quota?"/"+quota:""}</span> · 特休剩 <span class="num" id="qmAnn-${u}">…</span> · 假必 <span class="num">${holidayMustCount(u)}/${MAX_HOLIDAY_MUST}</span></span>`;
     q.appendChild(el);
     if(!waiting){
-      annualLeftAccurate(u).then(left=>{
+      annualLeftAccurate(u, null, `${MONTH}-${pad(days)}`).then(left=>{
         const el2=$(`#qmAnn-${u}`);
         if(el2) el2.textContent=left;
       });
@@ -2505,7 +2507,7 @@ async function updateClPreview(){
   if($("#clPool").value==="annual"){
     const token = ++CL_PREVIEW_TOKEN;
     box.innerHTML = spanNote + `<div class="mnote">正在確認特休剩餘天數…</div>` + leadNote(s);
-    const left = await annualLeftAccurate(ME.uid);
+    const left = await annualLeftAccurate(ME.uid, null, e);
     if(token!==CL_PREVIEW_TOKEN) return; // 使用者手更快，這次結果過期了，不要覆蓋畫面
     const annualNote = dd.length>left
       ? `<div class="warnbox">特休僅剩 <b>${left}</b> 天，這筆申請共 ${dd.length} 天，超過剩餘天數。如果只有部分天數要用特休，請改選「排休」送出，核准後再請老闆娘把要用特休的那幾天個別改成特休。</div>`
@@ -2524,7 +2526,7 @@ $("#clSave").onclick=async()=>{
   if(!s||!e){ toast("請選開始日與結束日"); return; }
   if(s>e){ toast("開始日不能晚於結束日"); return; }
   if($("#clPool").value==="annual"){
-    const dd=dRange(s,e), left=await annualLeftAccurate(ME.uid);
+    const dd=dRange(s,e), left=await annualLeftAccurate(ME.uid, null, e);
     if(dd.length>left){ toast(`特休只剩 ${left} 天，不夠這筆申請的 ${dd.length} 天`); return; }
   }
   const id="c"+Date.now().toString(36);
@@ -2551,7 +2553,7 @@ function openReview(c){
   $("#crRange").textContent=`${fmtRange(c.start,c.end)} · ${n} 天`;
   $("#crMeta").textContent=`${c.reason||"連續休假"} · 用${c.pool==="annual"?"特休":"排休"} · 目前${CL_STATUS[c.status||"pending"]}`;
   if(c.pool==="annual"){
-    annualLeftAccurate(c.uid).then(left=>{
+    annualLeftAccurate(c.uid, null, c.end).then(left=>{
       if(CR!==c) return; // 使用者已經切到別筆申請了
       $("#crMeta").textContent += ` · 該員工特休剩 ${left} 天`;
     });
@@ -2651,7 +2653,7 @@ function renderDPeers(){
   $("#dPeers").innerHTML = `<div class="peerbox"><div class="hd"><span class="lbl">目前已排休</span><span class="badge ${full?"full":"open"}">${confirmedCount}/${MAX_MUST_PER_DAY}${full?" 已額滿":""}</span></div><div class="chips">${chips.join("")}</div><div class="cap">每天最多 ${MAX_MUST_PER_DAY} 位，依回報順序排列</div></div>`;
 }
 async function refreshAnnualLeft(excludeMonthDay){
-  const left = await annualLeftAccurate(ME.uid, excludeMonthDay);
+  const left = await annualLeftAccurate(ME.uid, excludeMonthDay, excludeMonthDay);
   // 使用者可能已經關掉這天、或切到別天，這裡再次確認還是同一天才套用，避免結果套到別天上
   if(MONTH+"-"+DAY !== excludeMonthDay) return;
   CUR_ANN_LEFT = left;
@@ -2793,7 +2795,7 @@ $("#dSave").onclick=async()=>{
   if(MDATA.status==="locked") return;
   if(!DRAFT.state) return;
   if(DRAFT.state==="must" && DRAFT.pool==="annual"){
-    const left = await annualLeftAccurate(ME.uid, MONTH+"-"+DAY);
+    const left = await annualLeftAccurate(ME.uid, MONTH+"-"+DAY, MONTH+"-"+DAY);
     if(left<=0){ toast("特休天數不夠了，請改選排休"); syncModal(); return; }
   }
   const payload={state:DRAFT.state};

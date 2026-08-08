@@ -410,11 +410,9 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   border:1px solid var(--line);border-radius:999px;padding:3px 9px;flex:none;white-space:nowrap}
 .legendBtn svg{width:11px;height:11px}
 .legend.hide{display:none}
-.topLine2{margin-top:6px}
+.topLine2{margin-top:6px;font-size:11.5px;color:var(--ink3)}
 .topLine2.hide{display:none}
-.annualChip{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;
-  border-radius:999px;background:var(--annual-bg);color:var(--annual)}
-.annualChip b{color:var(--annual)}
+.annualChip b{color:var(--ink2)}
 
 /* 月曆卡片底部：自己的填寫狀態＋標記完成按鈕 */
 .doneRow{display:flex;align-items:center;gap:6px;position:relative;
@@ -1661,7 +1659,7 @@ function renderEmp(){
 
   const hc=holidayMustCount(ME.uid);
   $("#eHolCnt").textContent=`${hc} / ${MAX_HOLIDAY_MUST}`;
-  $("#eHolLeft").textContent = hc>=MAX_HOLIDAY_MUST ? "· 已達上限" : `· 最多指定 ${MAX_HOLIDAY_MUST-hc} 天`;
+  $("#eHolLeft").textContent = ME.role==="正職" ? "" : (hc>=MAX_HOLIDAY_MUST ? "· 已達上限" : `· 最多指定 ${MAX_HOLIDAY_MUST-hc} 天`);
   $("#eCnt").textContent = Object.keys(mine).length;
 
   const cal=$("#eCal"); cal.innerHTML="";

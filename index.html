@@ -518,6 +518,37 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   font-size:10px;line-height:1;font-weight:500;min-width:15px;height:15px;border-radius:999px;
   align-items:center;justify-content:center;padding:0 3px}
 .subtabs .badge.show{display:flex}
+/* 更新紀錄 */
+.logBadgePill{display:none;background:var(--clay);color:#fff;font-size:10px;font-weight:500;
+  min-width:16px;height:16px;border-radius:999px;align-items:center;justify-content:center;padding:0 4px;margin-left:2px}
+.logBadgePill.show{display:inline-flex}
+.loghead select{width:100%;font-size:13px;color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:9px;padding:9px 10px;margin-bottom:10px}
+.logtabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px;-webkit-overflow-scrolling:touch}
+.logtabs::-webkit-scrollbar{display:none}
+.logtabs button{flex:none;font-size:12.5px;padding:6px 13px;border-radius:999px;border:1px solid var(--line);
+  background:var(--surface);color:var(--ink2);white-space:nowrap}
+.logtabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.logstaff{display:flex;gap:8px;overflow-x:auto;padding-bottom:12px;-webkit-overflow-scrolling:touch}
+.logstaff::-webkit-scrollbar{display:none}
+.logschip{flex:none;display:flex;flex-direction:column;align-items:center;gap:4px;opacity:.5;min-width:44px}
+.logschip.on{opacity:1}
+.logschip .ico{width:30px;height:30px;border-radius:50%;object-fit:cover;border:2px solid transparent}
+.logschip.on .ico{border-color:var(--ink)}
+.logschip span{font-size:10px;color:var(--ink2);white-space:nowrap}
+.logday{font-size:12px;color:var(--ink3);padding:12px 2px 7px;font-weight:500}
+.logday:first-child{padding-top:2px}
+.logfeed{display:flex;flex-direction:column;gap:8px}
+.logentry{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:11px 12px;
+  display:flex;gap:9px}
+.logentry .ico{width:28px;height:28px;border-radius:50%;object-fit:cover;flex:none;margin-top:1px}
+.logentry .body{flex:1;min-width:0}
+.logentry .row1{display:flex;align-items:baseline;gap:6px}
+.logentry .nm{font-size:13px;font-weight:600}
+.logentry .tm{font-size:11px;color:var(--ink3);margin-left:auto;flex:none}
+.logentry .ds{font-size:12.5px;color:var(--ink);margin-top:2px;line-height:1.5}
+.logentry .chip{margin-top:6px}
+.logempty{text-align:center;font-size:12px;color:var(--ink3);padding:24px 10px}
 /* 月曆下方規則說明（圖示三行） */
 .ruleRows{display:flex;flex-direction:column;gap:3px;margin-top:12px;padding-left:15px}
 .ruleRows .row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--ink3);line-height:1.5}
@@ -747,6 +778,14 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
 
   <!-- owner -->
   <div id="ownerView" class="hide">
+    <button class="ruleQuick" id="logQuickBtn" type="button">
+      <span class="lft">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="9"/></svg>
+        <span>更新紀錄</span>
+        <span class="logBadgePill" id="logBadge"></span>
+      </span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
+    </button>
     <div class="card">
       <div class="mhead">
         <div class="m">
@@ -1033,6 +1072,37 @@ table.grid{border-collapse:separate;border-spacing:3px;min-width:100%}
   </div>
 </div>
 
+<!-- activity log (owner) -->
+<div class="mask hide" id="logMask">
+  <div class="modal" style="max-width:480px">
+    <div class="mh"><div class="dd">更新紀錄</div><div class="wd">依時間新到舊排列</div></div>
+    <div class="loghead">
+      <select id="logRange">
+        <option value="2m">最近2個月</option>
+        <option value="1m">最近1個月</option>
+        <option value="thism">本月</option>
+        <option value="custom">自訂區間...</option>
+      </select>
+      <div class="fgrid hide" id="logCustomWrap" style="margin-top:-2px;margin-bottom:10px">
+        <div class="fld"><label>開始日</label><input type="date" id="logFrom"></div>
+        <div class="fld"><label>結束日</label><input type="date" id="logTo"></div>
+      </div>
+    </div>
+    <div class="logtabs" id="logTypeTabs">
+      <button class="on" data-t="all" type="button">全部</button>
+      <button data-t="add" type="button">排休登記</button>
+      <button data-t="clear" type="button">清除登記</button>
+      <button data-t="note" type="button">備註留言</button>
+      <button data-t="cl" type="button">連續休假</button>
+    </div>
+    <div class="logstaff" id="logStaffTabs"></div>
+    <div id="logFeed"></div>
+    <div class="mfoot">
+      <button class="btn g" id="logClose" style="width:100%">關閉</button>
+    </div>
+  </div>
+</div>
+
 <!-- staff edit modal -->
 <div class="mask c hide" id="staffMask">
   <div class="modal">
@@ -1167,6 +1237,125 @@ function bindContinuous(){
     render();
   }, err=>{ console.error(err); });
 }
+/* ===== 更新紀錄（活動紀錄）===== */
+let LOG_ALL=[], LOG_SEEN=0, unsubLog=null, unsubLogSeen=null;
+let LOG_TYPE="all", LOG_STAFF="all", LOG_RANGE="2m";
+function bindActivityLog(){
+  if(unsubLog) return;
+  unsubLog = onValue(ref(db,`${ROOT}/activityLog`), snap=>{
+    const all = snap.val()||{};
+    LOG_ALL = Object.entries(all).map(([id,v])=>({id, ...v})).sort((a,b)=>(b.ts||0)-(a.ts||0));
+    updateLogBadge();
+    if(!$("#logMask").classList.contains("hide")){ renderLogStaffTabs(); renderActivityLog(); }
+  }, err=>{ console.error(err); });
+}
+function bindLogSeen(){
+  if(unsubLogSeen || !ME) return;
+  unsubLogSeen = onValue(ref(db,`${ROOT}/logSeen/${ME.uid}`), snap=>{
+    LOG_SEEN = snap.val()||0;
+    updateLogBadge();
+  }, err=>{ console.error(err); });
+}
+function updateLogBadge(){
+  const badge=$("#logBadge");
+  if(!badge) return;
+  const cnt = LOG_ALL.filter(x=>(x.ts||0)>LOG_SEEN).length;
+  badge.textContent = cnt>99 ? "99+" : cnt;
+  badge.classList.toggle("show", cnt>0);
+}
+function logStateLabel(state){
+  return state==="must" ? "必休" : state==="prefer" ? "許願休假"
+    : state==="limited" ? "提早閃人" : state==="extra" ? "可增班" : (state||"");
+}
+function logActivity(action, detail){
+  if(!ME) return;
+  const id = "l"+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+  set(ref(db,`${ROOT}/activityLog/${id}`), {uid:ME.uid, name:ME.name, action, detail, ts:Date.now()})
+    .catch(e=>console.error("activity log write failed", e));
+}
+async function pruneOldLogs(){
+  try{
+    const cutoff = Date.now() - 1000*60*60*24*30*6; // 約6個月
+    const stale = LOG_ALL.filter(x=>!x.ts || x.ts<cutoff);
+    if(!stale.length) return;
+    const upd={}; stale.forEach(x=>{ upd[x.id]=null; });
+    await update(ref(db,`${ROOT}/activityLog`), upd);
+  }catch(e){ console.error("prune activity log failed", e); }
+}
+function logRangeBounds(){
+  const now=new Date();
+  if(LOG_RANGE==="custom"){
+    const f=$("#logFrom").value, t=$("#logTo").value;
+    const start = f ? new Date(f+"T00:00:00").getTime() : 0;
+    const end   = t ? new Date(t+"T23:59:59").getTime() : Date.now();
+    return {start, end};
+  }
+  if(LOG_RANGE==="thism"){
+    return {start:new Date(now.getFullYear(), now.getMonth(), 1).getTime(), end:Date.now()};
+  }
+  const months = LOG_RANGE==="1m" ? 1 : 2;
+  return {start:new Date(now.getFullYear(), now.getMonth()-months, now.getDate()).getTime(), end:Date.now()};
+}
+const LOG_TAGS = {
+  add:["排休登記","o"], clear:["清除登記","d"], note:["備註留言","l"],
+  clApply:["連續休假・申請","w"], clApprove:["連續休假・已核准","o"], clReject:["連續休假・已駁回","d"]
+};
+function logEntryHtml(x){
+  const s=STAFF[x.uid]||{};
+  const nm = x.name || s.name || "—";
+  const animal = s.animal || "rabbit";
+  const d=new Date(x.ts||0);
+  const hh=String(d.getHours()).padStart(2,"0"), mi=String(d.getMinutes()).padStart(2,"0");
+  const tag = LOG_TAGS[x.action]||["",""];
+  let desc = x.detail||"";
+  if(x.action==="note" && desc.length>34) desc = desc.slice(0,34)+"...";
+  return `<div class="logentry">
+    <img class="ico" src="${avatarOf(animal)}" alt="">
+    <div class="body">
+      <div class="row1"><span class="nm">${escapeHtml(nm)}</span><span class="tm num">${hh}:${mi}</span></div>
+      <div class="ds">${escapeHtml(desc)}</div>
+      ${tag[0]?`<span class="chip ${tag[1]}">${tag[0]}</span>`:""}
+    </div>
+  </div>`;
+}
+function renderActivityLog(){
+  const box=$("#logFeed");
+  if(!box) return;
+  const {start,end} = logRangeBounds();
+  const TYPE_MAP = {add:["add"], clear:["clear"], note:["note"], cl:["clApply","clApprove","clReject"]};
+  const list = LOG_ALL.filter(x=>{
+    if(!x.ts || x.ts<start || x.ts>end) return false;
+    if(LOG_STAFF!=="all" && x.uid!==LOG_STAFF) return false;
+    if(LOG_TYPE!=="all" && !(TYPE_MAP[LOG_TYPE]||[]).includes(x.action)) return false;
+    return true;
+  });
+  if(!list.length){ box.innerHTML=`<div class="logempty">這段期間沒有紀錄。</div>`; return; }
+  const groups=[]; let cur=null;
+  list.forEach(x=>{
+    const d=new Date(x.ts);
+    const key=`${d.getMonth()+1}/${d.getDate()}`;
+    if(!cur || cur.key!==key){ cur={key, items:[]}; groups.push(cur); }
+    cur.items.push(x);
+  });
+  box.innerHTML = groups.map(g=>
+    `<div class="logday">${g.key}</div><div class="logfeed">${g.items.map(logEntryHtml).join("")}</div>`
+  ).join("");
+}
+function renderLogStaffTabs(){
+  const box=$("#logStaffTabs");
+  if(!box) return;
+  const list = Object.entries(STAFF).filter(([,s])=>s.active).sort((a,b)=>(a[1].order||0)-(b[1].order||0));
+  let html = `<div class="logschip${LOG_STAFF==="all"?" on":""}" data-uid="all">
+      <div class="ico" style="display:flex;align-items:center;justify-content:center;background:var(--tint);font-size:10px;color:var(--ink2)">全部</div>
+      <span>全部</span></div>`;
+  html += list.map(([uid,s])=>`<div class="logschip${LOG_STAFF===uid?" on":""}" data-uid="${uid}">
+      <img class="ico" src="${avatarOf(s.animal)}" alt=""><span>${escapeHtml(s.name)}</span></div>`).join("");
+  box.innerHTML = html;
+  box.querySelectorAll(".logschip").forEach(el=>{
+    el.onclick=()=>{ LOG_STAFF=el.dataset.uid; renderLogStaffTabs(); renderActivityLog(); };
+  });
+}
+
 // 把日期範圍（含頭尾）展開成 Date 陣列，用來跨月切分
 function dRange(startISO,endISO){
   const out=[]; let d=new Date(startISO+"T00:00:00");
@@ -1227,6 +1416,28 @@ const isHol = (y,m,d)=>{const w=new Date(y,m-1,d).getDay(); return w===0||w===6;
 const dowOf = (y,m,d)=> new Date(y,m-1,d).getDay();
 const toast = t=>{const e=$("#toast");e.textContent=t;e.classList.add("on");setTimeout(()=>e.classList.remove("on"),1900);};
 const avatarOf = key => ANIMALS[key] || ANIMALS.rabbit;
+$("#logQuickBtn").onclick=async()=>{
+  $("#logMask").classList.remove("hide");
+  renderLogStaffTabs();
+  renderActivityLog();
+  await pruneOldLogs();
+  if(ME) set(ref(db,`${ROOT}/logSeen/${ME.uid}`), Date.now()).catch(()=>{});
+};
+$("#logClose").onclick=()=>$("#logMask").classList.add("hide");
+$("#logRange").onchange=()=>{
+  LOG_RANGE=$("#logRange").value;
+  $("#logCustomWrap").classList.toggle("hide", LOG_RANGE!=="custom");
+  renderActivityLog();
+};
+$("#logFrom").onchange=renderActivityLog;
+$("#logTo").onchange=renderActivityLog;
+$("#logTypeTabs").querySelectorAll("button").forEach(b=>{
+  b.onclick=()=>{
+    LOG_TYPE=b.dataset.t;
+    $("#logTypeTabs").querySelectorAll("button").forEach(x=>x.classList.toggle("on", x===b));
+    renderActivityLog();
+  };
+});
 // 權限：full=完整管理 / view=檢視全體（唯讀） / self=僅看自己（預設）
 function permOf(uid){
   const s=STAFF[uid]; if(!s) return "self";
@@ -1345,6 +1556,7 @@ function loginAs(uid){
   MONTH = nextMonth();
   bindMonth();
   bindContinuous();
+  if(ME.perm==="full" || ME.perm==="view"){ bindActivityLog(); bindLogSeen(); }
 }
 const REMEMBER_KEY=`${ROOT}_remember`;
 const REMEMBER_DAYS=7;
@@ -1661,7 +1873,7 @@ function render(){
     else if(v==="owner")     renderOwner();
     else if(v==="announce")  renderAnnounce();
     else                     renderStaff();
-    if(canMgmt) updateAnnounceBadge();
+    if(canMgmt){ updateAnnounceBadge(); updateLogBadge(); }
   }catch(e){ console.error("render error",e); toast("畫面錯誤，請重新整理"); }
 }
 
@@ -2603,6 +2815,7 @@ $("#clSave").onclick=async()=>{
     status:"pending",
     ts:serverTimestamp()
   });
+  logActivity("clApply", `申請 ${fmtRange(s,e)} 連續休假`);
   $("#clMask").classList.add("hide");
   toast("已送出申請，記得順便用 LINE 或當面跟老闆娘說一聲，這樣才不會漏看喔");
 };
@@ -2640,6 +2853,7 @@ $("#crClose").onclick=()=>$("#crMask").classList.add("hide");
 $("#crReject").onclick=async()=>{
   if(ME.perm!=="full") return;
   await update(ref(db,`${ROOT}/continuous/${CR.id}`), {status:"rejected"});
+  logActivity("clReject", `駁回了${(STAFF[CR.uid]&&STAFF[CR.uid].name)||""}的連續休假申請（${fmtRange(CR.start,CR.end)}）`);
   $("#crMask").classList.add("hide"); toast("已婉拒");
 };
 // 把日期範圍依月份分組，回傳 {"YYYY-MM": ["01","02",...]}
@@ -2669,6 +2883,7 @@ $("#crApprove").onclick=async()=>{
       });
     }
   }
+  logActivity("clApprove", `核准了${(STAFF[c.uid]&&STAFF[c.uid].name)||""}的連續休假申請（${fmtRange(c.start,c.end)}）`);
   $("#crMask").classList.add("hide");
   toast("已核准，並排入必休");
 };
@@ -2868,6 +3083,7 @@ $("#dCancel").onclick=()=>$("#dayMask").classList.add("hide");
 $("#dClear").onclick=async()=>{
   if(MDATA.status==="locked") return;
   await remove(ref(db,`${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`));
+  logActivity("clear", `清除了 ${Number(MONTH.split("-")[1])}/${Number(DAY)} 的登記`);
   $("#dayMask").classList.add("hide"); toast("已清除");
 };
 $("#dSave").onclick=async()=>{
@@ -2897,12 +3113,18 @@ $("#dSave").onclick=async()=>{
     payload.window={start:s,end:e};
   }
   await set(ref(db,`${ROOT}/months/${MONTH}/requests/${ME.uid}/${DAY}`), payload);
+  logActivity("add", `將 ${Number(MONTH.split("-")[1])}/${Number(DAY)} 設為${logStateLabel(DRAFT.state)}`);
   $("#dayMask").classList.add("hide"); toast("已儲存");
 };
 $("#eNoteSave").onclick=async()=>{
   const v=$("#eNote").value.trim();
-  if(v) await set(ref(db,`${ROOT}/months/${MONTH}/notes/${ME.uid}`), v);
-  else   await remove(ref(db,`${ROOT}/months/${MONTH}/notes/${ME.uid}`));
+  if(v){
+    await set(ref(db,`${ROOT}/months/${MONTH}/notes/${ME.uid}`), v);
+    logActivity("note", `在${Number(MONTH.split("-")[1])}月留言：${v}`);
+  } else {
+    await remove(ref(db,`${ROOT}/months/${MONTH}/notes/${ME.uid}`));
+    logActivity("note", `清除了${Number(MONTH.split("-")[1])}月的留言`);
+  }
   toast("已儲存備註");
 };
 
